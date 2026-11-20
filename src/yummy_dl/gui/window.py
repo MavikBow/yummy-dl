@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QHeaderView,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -35,6 +34,7 @@ from .. import core, hls
 from ..api import YummyClient
 from ..extractors import EXTRACTORS, find_extractor
 from ..models import Anime, Video
+from . import help as helpdlg
 from . import theme
 from .viewer import ClickableLabel, ImageViewer
 from .workers import CANCELLED, DONE, FAILED, QUEUED, RUNNING, SKIPPED, DownloadManager, Job, run_bg
@@ -83,6 +83,19 @@ class MainWindow(QMainWindow):
         act = QAction("Open &config folder", self)
         act.triggered.connect(lambda: self._open(cfgmod.config_path().parent))
         menu.addAction(act)
+
+        help_menu = self.menuBar().addMenu("&Help")
+        for text, tab, key in (
+            ("&Quick start", helpdlg.TAB_START, QKeySequence.HelpContents),
+            ("Set up API &token…", helpdlg.TAB_TOKEN, None),
+            ("&Command-line usage", helpdlg.TAB_CLI, None),
+            ("&About yummy-dl", helpdlg.TAB_ABOUT, None),
+        ):
+            act = QAction(text, self)
+            if key is not None:
+                act.setShortcut(key)
+            act.triggered.connect(lambda _c=False, t=tab: self._show_help(t))
+            help_menu.addAction(act)
 
     def _build_ui(self) -> None:
         # search bar
@@ -474,16 +487,17 @@ class MainWindow(QMainWindow):
             self._fill_episodes()
 
     def _set_token(self) -> None:
-        tok, ok = QInputDialog.getText(
-            self, "API token",
-            "YummyAnime application token\n(create one at yummyani.me/dev/applications):",
-            QLineEdit.Normal, self.cfg.token)
-        if ok:
-            self.cfg.token = tok.strip()
-            cfgmod.save(self.cfg)
-            self.api.close()
-            self.api = YummyClient(token=self.cfg.effective_token)
-            self._status("Token saved", 4000)
+        self._show_help(helpdlg.TAB_TOKEN)
+
+    def _show_help(self, tab: int = helpdlg.TAB_START) -> None:
+        helpdlg.HelpDialog(self, self.cfg, self._save_token, tab).exec()
+
+    def _save_token(self, tok: str) -> None:
+        self.cfg.token = tok
+        cfgmod.save(self.cfg)
+        self.api.close()
+        self.api = YummyClient(token=self.cfg.effective_token)
+        self._status("Token saved" if tok else "Token removed", 4000)
 
     # --- queue --------------------------------------------------------------
 

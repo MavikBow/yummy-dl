@@ -49,7 +49,7 @@ The API currently answers without a token, but its docs say one is required, so 
 1. Register or log in at <https://yummyani.me>.
 2. Open <https://yummyani.me/dev/applications> and create a new application (a name and description are enough).
 3. Copy the application's **public token**.
-4. Save it: `yummy-dl config set-token <TOKEN>`. Alternatively, set the env var `YUMMY_APP_TOKEN`.
+4. Save it: in the desktop app use **Help → Set up API token…**, or run `yummy-dl config set-token <TOKEN>`. Alternatively, set the env var `YUMMY_APP_TOKEN`.
 
 The token is sent as the `X-Application` header.
 
@@ -63,7 +63,13 @@ The token is sent as the `X-Application` header.
 4. Click **Download selected**. The queue shows progress per episode. Cancel keeps partial files, so
    re-adding the episode resumes it. Double-click a finished row to open its folder.
 
-**Settings → Dark theme** switches the look and is remembered; until you set it, the app follows the system. The API token is under **Settings → API token…**.
+**Settings → Dark theme** switches the look and is remembered; until you set it, the app follows the system.
+
+**Help** (next to Settings, or F1) has:
+
+- a quick-start guide,
+- a guided **API token** setup: it opens the YummyAnime applications page, then you paste the token and click Save,
+- a command-line cheat sheet, with "Copy all" and, in the Windows release, "Open terminal here".
 
 ## Usage
 

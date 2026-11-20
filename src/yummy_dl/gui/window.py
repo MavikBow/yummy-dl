@@ -36,6 +36,7 @@ from ..api import YummyClient
 from ..extractors import EXTRACTORS, find_extractor
 from ..models import Anime, Video
 from . import theme
+from .viewer import ClickableLabel, ImageViewer
 from .workers import CANCELLED, DONE, FAILED, QUEUED, RUNNING, SKIPPED, DownloadManager, Job, run_bg
 
 QUALITIES = [1080, 720, 480, 360]
@@ -55,6 +56,7 @@ class MainWindow(QMainWindow):
         self.jobs: dict[int, Job] = {}
         self._req = 0  # guards against stale background responses
         self._images: dict[str, bytes] = {}  # poster URL -> bytes
+        self._poster_anime: Anime | None = None  # whose poster is currently shown
 
         self.manager = DownloadManager()
         self.manager.progress.connect(self._on_progress)
@@ -105,8 +107,11 @@ class MainWindow(QMainWindow):
         self.sub_lbl = QLabel("")
         self.sub_lbl.setWordWrap(True)
         self.sub_lbl.setForegroundRole(QPalette.PlaceholderText)
-        self.poster = QLabel()
+        self.poster = ClickableLabel()
         self.poster.setFixedSize(POSTER_W, POSTER_H)
+        self.poster.setCursor(Qt.PointingHandCursor)
+        self.poster.setToolTip("Click to view full screen")
+        self.poster.clicked.connect(self._open_poster)
         self.poster.setAlignment(Qt.AlignCenter)
         self.poster.hide()
 
@@ -259,8 +264,8 @@ class MainWindow(QMainWindow):
         pm.loadFromData(data)
         return pm
 
-    def _load_image(self, url: str, on_loaded) -> None:
-        """Fetch an image in the background (cached); failures are silently ignored."""
+    def _load_image(self, url: str, on_loaded, on_failed=None) -> None:
+        """Fetch an image in the background (cached). Failures are ignored unless `on_failed` is given."""
         if url in self._images:
             on_loaded(self._images[url])
             return
@@ -269,10 +274,11 @@ class MainWindow(QMainWindow):
             self._images[url] = data
             on_loaded(data)
 
-        run_bg(lambda: self.api.get_image(url), done, lambda _err: None)
+        run_bg(lambda: self.api.get_image(url), done, on_failed or (lambda _err: None))
 
     def _show_poster(self, anime: Anime, req: int) -> None:
         url = anime.poster("big", "medium", "fullsize")
+        self._poster_anime = anime
         self.poster.clear()
         self.poster.setVisible(bool(url))
         if not url:
@@ -288,6 +294,26 @@ class MainWindow(QMainWindow):
             self.poster.setPixmap(pm.scaled(POSTER_W, POSTER_H, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
         self._load_image(url, show)
+
+    def _open_poster(self) -> None:
+        anime = self._poster_anime
+        if anime is None or self.poster.pixmap() is None:
+            return
+        small = anime.poster("big", "medium")
+        start = self._pixmap(self._images[small]) if small in self._images else self.poster.pixmap()
+        viewer = ImageViewer(start, anime.title, self)
+        full = anime.poster("fullsize", "mega", "huge")
+        if full and full != small:
+            viewer.loading = full not in self._images
+
+            def upgrade(data: bytes | None) -> None:
+                try:
+                    viewer.set_pixmap(self._pixmap(data) if data else QPixmap())
+                except RuntimeError:  # viewer already closed and deleted
+                    pass
+
+            self._load_image(full, upgrade, lambda _err: upgrade(None))
+        viewer.show_on(self)
 
     # --- search & title -----------------------------------------------------
 

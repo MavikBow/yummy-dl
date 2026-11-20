@@ -42,7 +42,7 @@ The token is sent as the `X-Application` header.
 
 `yummy-dl-gui` (or `yummy-dl gui`) opens a window:
 
-1. Search for a title and pick it from the list. Posters show next to the results and in the details panel.
+1. Search for a title and pick it from the list. Posters show next to the results and in the details panel. Click the poster to view it full screen.
 2. Choose the dub, the player (Auto prefers CVH), the max quality, and the folder.
 3. Tick episodes. Ones you already downloaded are marked ✓ and left unticked.
 4. Click **Download selected**. The queue shows progress per episode. Cancel keeps partial files, so

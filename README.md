@@ -4,7 +4,7 @@
 
 Downloader for Russian-dubbed anime from [YummyAnime](https://yummyani.me), with a desktop app and a
 command-line tool. It's built on the official API ([swagger](https://api.yani.tv/swagger)) and runs on Windows
-and Linux.
+and Linux. The interface is available in English and Russian ([Language](#language)).
 
 > The YummyAnime API is **for personal use only**. Don't redistribute downloaded content.
 
@@ -64,6 +64,7 @@ The token is sent as the `X-Application` header.
    re-adding the episode resumes it. Double-click a finished row to open its folder.
 
 **Settings → Dark theme** switches the look and is remembered; until you set it, the app follows the system.
+**Settings → Language** switches between English and Russian (see [Language](#language)).
 
 **Help** (next to Settings, or F1) has:
 

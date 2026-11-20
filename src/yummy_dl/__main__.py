@@ -1,3 +1,3 @@
-from yummy_dl.cli import app
+from yummy_dl.cli import main
 
-app()
+main()

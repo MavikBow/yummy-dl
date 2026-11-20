@@ -7,7 +7,10 @@ official API ([swagger](https://api.yani.tv/swagger)). Runs on Windows and Linux
 
 ## Install
 
-Requires Python 3.11+.
+**Windows:** download `yummy-dl-windows.zip`, unzip it anywhere, and either double-click `yummy-dl.exe`
+for guided mode or run it from a terminal with the commands below. ffmpeg is included in the zip.
+
+**From source** (Windows/Linux, Python 3.11+):
 
 ```bash
 pip install -e .          # or: uv pip install -e .
@@ -37,6 +40,7 @@ The token is sent as the `X-Application` header.
 yummy-dl search "берсерк"                 # find titles
 yummy-dl info berserk                     # dubs, episodes, players for a title (id/alias/text)
 yummy-dl download berserk                 # interactive: pick dub + episodes
+yummy-dl interactive                      # guided loop (also what double-clicking the .exe does)
 yummy-dl download berserk -d "MC Entertainment" -e 1-5,8 -q 720 -o D:\Anime
 yummy-dl config show                      # settings, config path, ffmpeg status
 yummy-dl config set --output-dir D:\Anime --quality 1080
@@ -67,4 +71,14 @@ pytest              # offline unit tests
 pytest -m live      # hits the real API/players
 ```
 
-Building a Windows exe: `pyinstaller --onefile --name yummy-dl src/yummy_dl/__main__.py`
+### Building the Windows exe
+
+On Windows (Python 3.11+ on PATH):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1                # dist\yummy-dl.exe
+powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1 -BundleFfmpeg  # + dist\yummy-dl-windows.zip
+```
+
+CI (`.github/workflows/build.yml`) builds the zip for `v*` tags or a manual run, once the repo is on GitHub.
+Linux users can just `pip install .`. A PyInstaller binary can be built the same way with `pyinstaller --onefile`.

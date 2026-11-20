@@ -232,5 +232,60 @@ def show() -> None:
     console.print(f"ffmpeg      : {hls.find_ffmpeg() or '[yellow]not found[/yellow]'}")
 
 
-if __name__ == "__main__":
+@app.command()
+def interactive() -> None:
+    """Guided mode: search, pick a dub and episodes, download. Loops until you leave it empty."""
+    console.print(f"[bold]yummy-dl[/bold] — downloads go to {cfgmod.load().effective_output_dir}")
+    console.print("[dim]Change it with: yummy-dl config set --output-dir <folder>[/dim]")
+    while True:
+        query = Prompt.ask("\nTitle to search (empty to quit)", default="", show_default=False).strip()
+        if not query:
+            return
+        try:
+            download(anime=query)
+        except typer.Exit:
+            pass  # error already printed; ask again
+
+
+def _windows_utf8() -> None:
+    """Cyrillic titles crash on cp1252 consoles/pipes: switch the console and std streams to UTF-8."""
+    import sys
+
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        ctypes.windll.kernel32.SetConsoleOutputCP(65001)
+        ctypes.windll.kernel32.SetConsoleCP(65001)
+    except (AttributeError, OSError):
+        pass
+    for stream in (sys.stdout, sys.stderr, sys.stdin):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except (ValueError, OSError):
+                pass
+
+
+def main() -> None:
+    """Entry point. A bare double-click on the Windows .exe starts guided mode and waits before closing."""
+    import sys
+
+    _windows_utf8()
+    if len(sys.argv) == 1 and getattr(sys, "frozen", False):
+        try:
+            interactive()
+        except (KeyboardInterrupt, EOFError):
+            pass
+        finally:
+            try:
+                input("\nPress Enter to close...")
+            except (KeyboardInterrupt, EOFError):
+                pass
+        return
     app()
+
+
+if __name__ == "__main__":
+    main()

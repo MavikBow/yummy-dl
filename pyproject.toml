@@ -19,7 +19,7 @@ dependencies = [
 dev = ["pytest>=8", "pyinstaller>=6.10"]
 
 [project.scripts]
-yummy-dl = "yummy_dl.cli:app"
+yummy-dl = "yummy_dl.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/yummy_dl"]

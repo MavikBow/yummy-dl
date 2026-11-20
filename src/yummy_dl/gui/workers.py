@@ -14,6 +14,7 @@ import httpx
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
 
 from .. import core
+from .. import scripts as scriptmod
 from ..models import Anime, Video
 
 
@@ -62,6 +63,9 @@ def run_bg(fn: Callable[[], object], on_done: Callable[[object], None], on_fail:
 # --- download queue ------------------------------------------------------------
 
 QUEUED, RUNNING, DONE, SKIPPED, FAILED, CANCELLED = "Queued", "Downloading", "Done", "Exists", "Failed", "Cancelled"
+CONVERTING = "Running script"
+ACTIVE = (QUEUED, RUNNING, CONVERTING)
+FINISHED = (DONE, SKIPPED, FAILED, CANCELLED)
 
 _ids = itertools.count(1)
 
@@ -134,3 +138,68 @@ class DownloadManager(QObject):
         else:
             job.status, job.result = DONE, path
             self.status.emit(job.id, DONE, f"{q}p · {path}")
+
+
+# --- user scripts ------------------------------------------------------------------
+
+
+@dataclass
+class ScriptJob:
+    script: scriptmod.Script
+    input: Path
+    id: int = field(default_factory=lambda: next(_ids))
+    status: str = QUEUED
+    result: Path | None = None
+    cancel: threading.Event = field(default_factory=threading.Event)
+
+
+class ScriptManager(QObject):
+    """Runs user scripts one at a time on its own thread, so a long encode never blocks downloads."""
+
+    progress = Signal(int, int, int)  # job id, done ms, total ms
+    status = Signal(int, str, str)  # job id, status, detail
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._queue: queue.Queue[ScriptJob] = queue.Queue()
+        self._thread: threading.Thread | None = None
+
+    def add(self, job: ScriptJob) -> None:
+        if self._thread is None:  # started lazily: most sessions never run a script
+            self._thread = threading.Thread(target=self._loop, name="scripts", daemon=True)
+            self._thread.start()
+        self._queue.put(job)
+        self.status.emit(job.id, QUEUED, "")
+
+    def _loop(self) -> None:
+        while True:
+            job = self._queue.get()
+            if not job.cancel.is_set():
+                self._run(job)
+
+    def _run(self, job: ScriptJob) -> None:
+        job.status = CONVERTING
+        self.status.emit(job.id, CONVERTING, "")
+        last = 0.0
+
+        def on_progress(done: int, total: int) -> None:
+            nonlocal last
+            if job.cancel.is_set():
+                raise core.Cancelled()
+            now = time.monotonic()
+            if now - last >= 0.3 or done >= total:
+                last = now
+                self.progress.emit(job.id, done, total)
+
+        try:
+            out = scriptmod.run_script(job.script, job.input, progress=on_progress)
+        except core.Cancelled:
+            job.status = CANCELLED
+            self.status.emit(job.id, CANCELLED, "original kept")
+        except Exception as e:  # never kill the thread
+            job.status = FAILED
+            self.status.emit(job.id, FAILED, f"{e or type(e).__name__} (original kept)")
+        else:
+            job.status, job.result = DONE, out[0]
+            more = f" (+{len(out) - 1} more)" if len(out) > 1 else ""
+            self.status.emit(job.id, DONE, f"{out[0].name}{more}")

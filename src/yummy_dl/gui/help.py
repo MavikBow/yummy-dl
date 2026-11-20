@@ -78,6 +78,12 @@ def cli_reference(cmd: str) -> str:
 {cmd} config set --output-dir D:\\Anime --quality 1080
 {cmd} config show
 
+# Scripts (saved ffmpeg commands; create them in Scripts -> Manage scripts...)
+{cmd} scripts list
+{cmd} scripts run "BBK 720p" D:\\Anime\\Berserk     # a folder or files; originals are replaced
+{cmd} download berserk -e 1-3 --script "BBK 720p"   # convert each new episode
+{cmd} download berserk --no-script                 # skip the auto-run script
+
 # Open this desktop app
 {cmd} gui
 
@@ -149,6 +155,11 @@ class HelpDialog(QDialog):
 <li>Dubs only available on the Alloha player can't be downloaded (it uses anti-bot protection).</li>
 <li>{ffmpeg_line}</li>
 </ul>
+<h3>Scripts</h3>
+<p><b>Scripts → Manage scripts…</b> saves ffmpeg commands with a name and a comment, e.g. to convert
+episodes for a TV or cut a long video into 10-minute parts. Run one from <b>Scripts → &lt;name&gt;</b> on files
+or a folder, by right-clicking a finished download, or tick <i>Run automatically after each download</i>.
+The converted file replaces the original.</p>
 <p>Set up your <a href="#token">API token</a> once. It takes a minute.</p>
 """
         lbl = _label(html)

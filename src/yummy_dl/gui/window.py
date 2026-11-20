@@ -9,6 +9,7 @@ from PySide6.QtGui import QAction, QDesktopServices, QIcon, QKeySequence, QPalet
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QFormLayout,
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QProgressBar,
     QPushButton,
@@ -31,13 +33,28 @@ from PySide6.QtWidgets import (
 
 from .. import config as cfgmod
 from .. import core, hls
+from .. import scripts as scriptmod
 from ..api import YummyClient
 from ..extractors import EXTRACTORS, find_extractor
 from ..models import Anime, Video
 from . import help as helpdlg
 from . import theme
 from .viewer import ClickableLabel, ImageViewer
-from .workers import CANCELLED, DONE, FAILED, QUEUED, RUNNING, SKIPPED, DownloadManager, Job, run_bg
+from .scripts_dialog import ScriptsDialog
+from .workers import (
+    ACTIVE,
+    CANCELLED,
+    DONE,
+    FAILED,
+    FINISHED,
+    QUEUED,
+    SKIPPED,
+    DownloadManager,
+    Job,
+    ScriptJob,
+    ScriptManager,
+    run_bg,
+)
 
 QUALITIES = [1080, 720, 480, 360]
 POSTER_W, POSTER_H = 160, 224
@@ -61,6 +78,15 @@ class MainWindow(QMainWindow):
         self.manager = DownloadManager()
         self.manager.progress.connect(self._on_progress)
         self.manager.status.connect(self._on_status)
+        self.script_mgr = ScriptManager()
+        self.script_mgr.progress.connect(self._on_progress)
+        self.script_mgr.status.connect(self._on_status)
+        self._scripts_error = ""
+        try:
+            self.scripts = scriptmod.load_scripts()
+        except scriptmod.ScriptError as e:
+            self.scripts, self._scripts_error = [], str(e)
+        self._confirm_delete = True  # ask before a manual run deletes originals
 
         self._build_menu()
         self._build_ui()
@@ -83,6 +109,9 @@ class MainWindow(QMainWindow):
         act = QAction("Open &config folder", self)
         act.triggered.connect(lambda: self._open(cfgmod.config_path().parent))
         menu.addAction(act)
+
+        self.scripts_menu = self.menuBar().addMenu("S&cripts")
+        self._rebuild_scripts_menu()
 
         help_menu = self.menuBar().addMenu("&Help")
         for text, tab, key in (
@@ -198,6 +227,8 @@ class MainWindow(QMainWindow):
         self.queue.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.queue.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.queue.doubleClicked.connect(self._open_job)
+        self.queue.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.queue.customContextMenuRequested.connect(self._queue_menu)
         h = self.queue.horizontalHeader()
         h.setSectionResizeMode(0, QHeaderView.Stretch)
         for col in (1, 2):
@@ -212,7 +243,7 @@ class MainWindow(QMainWindow):
         open_btn = QPushButton("Open folder")
         open_btn.clicked.connect(lambda: self._open(Path(self.out_edit.text())))
         qbtns = QHBoxLayout()
-        qbtns.addWidget(QLabel("Downloads (double-click to open):"), 1)
+        qbtns.addWidget(QLabel("Queue (double-click to open, right-click to run a script):"), 1)
         qbtns.addWidget(cancel_btn)
         qbtns.addWidget(clear_btn)
         qbtns.addWidget(open_btn)
@@ -550,12 +581,16 @@ class MainWindow(QMainWindow):
         if status == FAILED:
             item.setForeground(Qt.red)
         self.queue.setItem(r, 4, item)
-        if status in (DONE, SKIPPED) and job_id in self.jobs:
-            self._mark_downloaded(self.jobs[job_id])
+        job = self.jobs.get(job_id)
+        if status in (DONE, SKIPPED) and job:
+            self._mark_downloaded(job)
+        if status == DONE and isinstance(job, Job) and job.result:
+            if auto := scriptmod.auto_script(self.scripts):
+                self._run_script(auto, [job.result], confirm=False)
 
     def _mark_downloaded(self, job: Job) -> None:
         """Tick the finished episode in the list without disturbing the user's other checkboxes."""
-        if not self.anime or job.anime.anime_id != self.anime.anime_id:
+        if not isinstance(job, Job) or not self.anime or job.anime.anime_id != self.anime.anime_id:
             return
         for i in range(self.episodes.count()):
             item = self.episodes.item(i)
@@ -571,7 +606,7 @@ class MainWindow(QMainWindow):
         rows = {i.row() for i in self.queue.selectedIndexes()}
         for r in rows:
             job = self.jobs.get(self.queue.item(r, 0).data(Qt.UserRole))
-            if job and job.status in (QUEUED, RUNNING):
+            if job and job.status in ACTIVE:
                 job.cancel.set()
                 if job.status == QUEUED:
                     job.status = CANCELLED
@@ -580,7 +615,7 @@ class MainWindow(QMainWindow):
     def _clear_finished(self) -> None:
         for r in reversed(range(self.queue.rowCount())):
             job = self.jobs.get(self.queue.item(r, 0).data(Qt.UserRole))
-            if job and job.status in (DONE, SKIPPED, FAILED, CANCELLED):
+            if job and job.status in FINISHED:
                 self.queue.removeRow(r)
                 del self.jobs[job.id]
 
@@ -589,12 +624,120 @@ class MainWindow(QMainWindow):
         if job and job.result:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(job.result.parent)))
 
+    # --- scripts ------------------------------------------------------------
+
+    def _rebuild_scripts_menu(self) -> None:
+        menu = self.scripts_menu
+        menu.clear()
+        menu.setToolTipsVisible(True)
+        act = menu.addAction("&Manage scripts…")
+        act.triggered.connect(self._manage_scripts)
+        if not self.scripts:
+            menu.addSeparator()
+            hint = menu.addAction("No scripts yet: add one in Manage scripts…")
+            hint.setEnabled(False)
+            return
+        menu.addSeparator()
+        for script in self.scripts:
+            sub = menu.addMenu(script.name + ("   (auto)" if script.auto else ""))
+            sub.menuAction().setToolTip(script.comment)
+            sub.menuAction().setStatusTip(script.comment)
+            a = sub.addAction("Run on &files…")
+            a.triggered.connect(lambda _c=False, s=script: self._run_on_files(s))
+            a = sub.addAction("Run on a f&older…")
+            a.triggered.connect(lambda _c=False, s=script: self._run_on_folder(s))
+
+    def _manage_scripts(self) -> None:
+        if self._scripts_error:
+            self._error(f"{self._scripts_error}\nIt will be overwritten when you save.")
+            self._scripts_error = ""
+
+        def saved(scripts: list[scriptmod.Script]) -> None:
+            self.scripts = scripts
+            self._rebuild_scripts_menu()
+            self._status("Scripts saved", 4000)
+
+        ScriptsDialog(self, self.scripts, saved).exec()
+
+    def _run_on_files(self, script: scriptmod.Script) -> None:
+        exts = " ".join(f"*{e}" for e in sorted(core.VIDEO_EXTS))
+        files, _ = QFileDialog.getOpenFileNames(self, f"Run '{script.name}' on…", str(self._out_dir()),
+                                                f"Videos ({exts});;All files (*)")
+        if files:
+            self._run_script(script, [Path(f) for f in files])
+
+    def _run_on_folder(self, script: scriptmod.Script) -> None:
+        d = QFileDialog.getExistingDirectory(self, f"Run '{script.name}' on every video in…", str(self._out_dir()))
+        if d:
+            self._run_script(script, [Path(d)])
+
+    def _run_script(self, script: scriptmod.Script, paths: list[Path], confirm: bool = True) -> None:
+        if not hls.find_ffmpeg():
+            self._error("Scripts need ffmpeg, and it wasn't found.\n"
+                        "Windows: run  winget install ffmpeg  or put ffmpeg.exe next to yummy-dl-gui.exe.")
+            return
+        busy = {j.input for j in self.jobs.values() if isinstance(j, ScriptJob) and j.status in ACTIVE}
+        inputs = [p for p in scriptmod.collect_inputs(paths) if p not in busy]
+        if not inputs:
+            self._error("No video files found there (or they're already queued).")
+            return
+        if confirm and self._confirm_delete:
+            box = QMessageBox(QMessageBox.Question, "Run script",
+                              f"Run '{script.name}' on {len(inputs)} file(s)?\n\n"
+                              "Each original is deleted after its conversion succeeds. "
+                              "If ffmpeg fails, the original is kept.",
+                              QMessageBox.Yes | QMessageBox.Cancel, self)
+            box.setCheckBox(QCheckBox("Don't ask again until I restart the app"))
+            if box.exec() != QMessageBox.Yes:
+                return
+            self._confirm_delete = not box.checkBox().isChecked()
+        for src in inputs:
+            job = ScriptJob(script, src)
+            self.jobs[job.id] = job
+            row = self.queue.rowCount()
+            self.queue.insertRow(row)
+            title = QTableWidgetItem(f"⚙ {script.name}")
+            title.setData(Qt.UserRole, job.id)
+            title.setToolTip(script.comment)
+            self.queue.setItem(row, 0, title)
+            name = QTableWidgetItem(src.name)
+            name.setToolTip(str(src))
+            self.queue.setItem(row, 1, name)
+            self.queue.setItem(row, 2, QTableWidgetItem(""))
+            bar = QProgressBar()
+            bar.setRange(0, 100)
+            bar.setValue(0)
+            self.queue.setCellWidget(row, 3, bar)
+            self.queue.setItem(row, 4, QTableWidgetItem(QUEUED))
+            self.script_mgr.add(job)
+        self._status(f"Queued '{script.name}' on {len(inputs)} file(s)", 4000)
+
+    def _queue_menu(self, pos) -> None:
+        item = self.queue.itemAt(pos)
+        if not item:
+            return
+        rows = sorted({i.row() for i in self.queue.selectedIndexes()} | {item.row()})
+        files = []
+        for r in rows:
+            job = self.jobs.get(self.queue.item(r, 0).data(Qt.UserRole))
+            if job and job.status in (DONE, SKIPPED) and job.result and job.result.is_file():
+                files.append(job.result)
+        menu = QMenu(self)
+        sub = menu.addMenu("Run script")
+        sub.setEnabled(bool(files and self.scripts))
+        for script in self.scripts:
+            a = sub.addAction(script.name)
+            a.triggered.connect(lambda _c=False, s=script: self._run_script(s, files))
+        menu.addAction("Open folder", lambda: self._open_job(self.queue.indexFromItem(item)))
+        menu.exec(self.queue.viewport().mapToGlobal(pos))
+
     def closeEvent(self, event) -> None:
-        active = [j for j in self.jobs.values() if j.status in (QUEUED, RUNNING)]
+        active = [j for j in self.jobs.values() if j.status in ACTIVE]
         if active:
             ans = QMessageBox.question(
                 self, "yummy-dl",
-                f"{len(active)} download(s) still running. Quit anyway?\n(Partial downloads resume next time.)")
+                f"{len(active)} job(s) still running. Quit anyway?\n"
+                "(Partial downloads resume next time; unfinished scripts keep the original file.)")
             if ans != QMessageBox.Yes:
                 event.ignore()
                 return

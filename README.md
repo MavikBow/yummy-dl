@@ -71,6 +71,39 @@ The token is sent as the `X-Application` header.
 - a guided **API token** setup: it opens the YummyAnime applications page, then you paste the token and click Save,
 - a command-line cheat sheet, with "Copy all" and, in the Windows release, "Open terminal here".
 
+## Scripts
+
+**Scripts** (next to Settings) stores ffmpeg commands you run on downloaded episodes: converting for a TV or a
+hardware player, re-encoding to save space, cutting long videos into parts. Each script has a name, an
+optional comment, and the ffmpeg arguments with placeholders:
+
+| Placeholder | Becomes |
+|---|---|
+| `{input}` | the episode file |
+| `{name}` | its file name without extension |
+| `{ext}` | its extension |
+| `{outdir}` | where the result must be written |
+
+```text
+-i {input} -c:v libx264 -c:a libmp3lame -b:a 192k -vf scale=-2:720 {outdir}/{name}.mkv
+```
+
+- Placeholders never need quotes, even for names with spaces or Cyrillic letters.
+- **After a successful run the original is deleted** and the result takes its place. If ffmpeg fails or you
+  cancel, the original is kept.
+- *Save the results in a folder named after the video* puts the outputs in `<Title>/<episode name>/`. Use it
+  when cutting into parts (`-f segment -segment_time 600 … {outdir}/{name}_%02d.mkv`).
+- Start output names with `{name}`, so the app still marks the episode as downloaded (✓) and doesn't
+  download it again.
+- Run a script from **Scripts → <name>** on files or a whole folder, or right-click finished downloads in the
+  queue. Tick *Run automatically after each download* on one script to convert every new episode.
+- **From example ▾** in *Manage scripts…* has ready-made scripts: x264/MP3 720p, the same cut into
+  10-minute parts, and a remux to MKV.
+- Scripts run one at a time, alongside downloads, and are saved in `scripts.json` next to the config file.
+
+From the CLI: `yummy-dl scripts list`, `yummy-dl scripts run "<name>" <files or folders>`, and
+`yummy-dl download … --script "<name>"` (or `--no-script` to skip the auto-run one).
+
 ## Usage
 
 ```bash
@@ -81,6 +114,7 @@ yummy-dl interactive                      # guided loop (also what double-clicki
 yummy-dl download berserk -d "MC Entertainment" -e 1-5,8 -q 720 -o D:\Anime
 yummy-dl config show                      # settings, config path, ffmpeg status
 yummy-dl config set --output-dir D:\Anime --quality 1080
+yummy-dl scripts run "BBK 720p" D:\Anime\Berserk   # run a saved script on a folder
 ```
 
 - Files go to `<out>/<Title>/<Title> - E01 [Dub].mp4`. The default output folder is `Downloads/yummy-dl`.

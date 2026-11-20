@@ -1,4 +1,4 @@
-"""Command-line interface: `yummy-dl search | info | download | config`."""
+"""Command-line interface: `yummy-dl search | info | download | config | scripts`."""
 
 from __future__ import annotations
 
@@ -9,11 +9,12 @@ import httpx
 import typer
 from rich.console import Console
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn, TimeRemainingColumn
-from rich.prompt import IntPrompt, Prompt
+from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 
 from . import config as cfgmod
 from . import core, dash, direct, hls
+from . import scripts as scriptmod
 from .api import ApiError, YummyClient
 from .extractors import ExtractError, is_supported
 from .models import Anime
@@ -22,6 +23,9 @@ app = typer.Typer(help="Download Russian-dubbed anime from YummyAnime. Personal 
                   no_args_is_help=True, add_completion=False)
 config_app = typer.Typer(help="Manage settings (API token, defaults).", no_args_is_help=True)
 app.add_typer(config_app, name="config")
+scripts_app = typer.Typer(help="Run saved ffmpeg scripts on downloaded episodes (edit them in the GUI).",
+                          no_args_is_help=True)
+app.add_typer(scripts_app, name="scripts")
 console = Console()
 
 
@@ -120,9 +124,13 @@ def download(
     out: Annotated[Optional[Path], typer.Option("--out", "-o", help="Output directory")] = None,
     player: Annotated[Optional[str], typer.Option("--player", "-p", help="Preferred player, e.g. kodik")] = None,
     workers: Annotated[Optional[int], typer.Option("--workers", "-w", help="Parallel segment downloads")] = None,
+    script: Annotated[Optional[str], typer.Option(
+        "--script", "-s", help="Run this saved script on each new episode (default: the auto-run script)")] = None,
+    no_script: Annotated[bool, typer.Option("--no-script", help="Don't run the auto-run script")] = False,
 ) -> None:
     """Download episodes. Missing options are asked interactively."""
     cfg = cfgmod.load()
+    post = None if no_script else _pick_script(script)
     out_dir = out or cfg.effective_output_dir
     quality = quality or cfg.quality
     workers = workers or cfg.workers
@@ -165,6 +173,8 @@ def download(
     console.print(f"Dub [cyan]{chosen.dub_name}[/cyan], {len(picks)} episode(s), up to {quality}p → {out_dir}")
     if not hls.find_ffmpeg():
         console.print("[yellow]ffmpeg not found: Kodik episodes will be saved as .ts, Aksor episodes will fail.[/yellow]")
+    if post:
+        console.print(f"After each episode: script [cyan]{post.name}[/cyan] (the original is replaced)")
 
     failed: list[str] = []
     with httpx.Client(timeout=60, follow_redirects=True) as http, Progress(
@@ -190,8 +200,83 @@ def download(
                 failed.append(ep)
                 progress.update(task, description=f"Ep {ep} ✗")
                 progress.console.print(f"[red]episode {ep} failed:[/red] {e}")
+                continue
+            if post and not _run_one(post, path, progress):
+                failed.append(f"{ep} (script)")
     if failed:
         console.print(f"[red]{len(failed)} failed:[/red] {', '.join(failed)} — rerun to resume.")
+        raise typer.Exit(1)
+
+
+def _pick_script(name: str | None) -> scriptmod.Script | None:
+    try:
+        saved = scriptmod.load_scripts()
+        return scriptmod.find_script(saved, name) if name else scriptmod.auto_script(saved)
+    except scriptmod.ScriptError as e:
+        _fail(str(e))
+
+
+def _run_one(script: scriptmod.Script, src: Path, progress: Progress) -> bool:
+    task = progress.add_task(f"⚙ {src.name}", total=None)
+
+    def update(done: int, total: int) -> None:
+        progress.update(task, completed=done, total=total)
+
+    try:
+        out = scriptmod.run_script(script, src, progress=update)
+    except (scriptmod.ScriptError, OSError) as e:
+        progress.update(task, description=f"⚙ {src.name} ✗")
+        progress.console.print(f"[red]script failed[/red] on {src.name} (original kept): {e}")
+        return False
+    progress.update(task, description=f"⚙ {src.name} ✓")
+    for p in out:
+        progress.console.print(f"[green]converted[/green] {p}")
+    return True
+
+
+@scripts_app.command("list")
+def scripts_list() -> None:
+    """Show saved scripts."""
+    try:
+        saved = scriptmod.load_scripts()
+    except scriptmod.ScriptError as e:
+        _fail(str(e))
+    if not saved:
+        console.print(f"No scripts yet. Create them in the desktop app (Scripts → Manage scripts…) "
+                      f"or in {scriptmod.scripts_path()}")
+        return
+    t = Table("Name", "Comment", "Auto", "Command")
+    for sc in saved:
+        t.add_row(sc.name, sc.comment, "yes" if sc.auto else "", " ".join(sc.command.split()))
+    console.print(t)
+    console.print(f"[dim]{scriptmod.scripts_path()}[/dim]")
+
+
+@scripts_app.command("run")
+def scripts_run(
+    name: Annotated[str, typer.Argument(help="Script name (or a unique part of it)")],
+    paths: Annotated[list[Path], typer.Argument(help="Video files and/or folders of episodes")],
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Don't ask for confirmation")] = False,
+) -> None:
+    """Run a saved script on files or folders. Originals are deleted after a successful run."""
+    script = _pick_script(name)
+    if not hls.find_ffmpeg():
+        _fail("ffmpeg not found (Windows: winget install ffmpeg)")
+    inputs = scriptmod.collect_inputs(p.expanduser() for p in paths)
+    if not inputs:
+        _fail("no video files found")
+    console.print(f"Script [cyan]{script.name}[/cyan] on {len(inputs)} file(s):")
+    for p in inputs:
+        console.print(f"  {p}")
+    if not yes and not Confirm.ask("Originals are deleted after each successful run. Continue?", default=True):
+        raise typer.Exit(1)
+    failed = 0
+    with Progress(TextColumn("[bold]{task.description}"), BarColumn(), TaskProgressColumn(),
+                  TimeRemainingColumn(), console=console) as progress:
+        for src in inputs:
+            failed += not _run_one(script, src, progress)
+    if failed:
+        console.print(f"[red]{failed} failed[/red]")
         raise typer.Exit(1)
 
 

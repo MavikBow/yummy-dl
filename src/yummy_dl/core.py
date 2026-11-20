@@ -120,9 +120,31 @@ def episode_path(anime: Anime, video: Video, out_dir: Path) -> Path:
     return out_dir / sanitize(anime.title, 80) / episode_filename(anime.title, video.number, video.dub_name)
 
 
+VIDEO_EXTS = {".mp4", ".mkv", ".ts", ".avi", ".webm", ".mov", ".m4v"}
+
+
 def existing_download(target: Path) -> Path | None:
+    """The finished file for this episode, if any.
+
+    Besides the download itself this finds what a user script turned it into (the original is
+    deleted then): `<stem>.mkv`, `<stem>_00.mkv`, or a folder named `<stem>` holding the parts.
+    """
+    if target.with_name(target.name + ".parts").exists():
+        return None  # unfinished download; resume it
     for p in (target, target.with_suffix(".ts")):
-        if p.exists() and not p.with_name(target.name + ".parts").exists():
+        if p.exists():
+            return p
+    folder, stem = target.parent, target.stem
+    if not folder.is_dir():
+        return None
+    for p in sorted(folder.iterdir()):
+        if not p.name.startswith(stem):
+            continue
+        rest = p.name[len(stem):]
+        if p.is_dir():
+            if rest == "" and any(p.iterdir()):
+                return p
+        elif rest[:1] in (".", "_") and p.suffix.lower() in VIDEO_EXTS and ".muxing" not in rest:
             return p
     return None
 

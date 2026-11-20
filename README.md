@@ -273,3 +273,5 @@ yummy-dl is released under the [MIT License](LICENSE).
 The Windows release also bundles Qt/PySide6 (LGPL-3.0), FFmpeg (GPL-3.0), Python and several Python packages, each
 under its own licence. [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) lists them with links to their source code.
 The build script puts their licence texts into `licenses\` in the zip.
+The GitHub Actions build also puts the matching FFmpeg source code (`licenses\ffmpeg\ffmpeg-<version>.tar.xz`)
+into the zip, as the GPL requires. For a local build, pass it with `-FfmpegSource C:\path\to\ffmpeg-<version>.tar.xz`.

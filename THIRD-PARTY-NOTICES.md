@@ -20,11 +20,12 @@ exact version of every bundled component. None of these components was modified.
 ## FFmpeg
 
 - **Licence:** GNU General Public License v3 or later (GPL-3.0-or-later). Text: `licenses/ffmpeg/GPL-3.0.txt`.
-- **Which build:** `ffmpeg.exe` is the unmodified "full" Windows build from <https://www.gyan.dev/ffmpeg/builds/>,
+- **Which build:** `ffmpeg.exe` is an unmodified Windows release build from <https://www.gyan.dev/ffmpeg/builds/>,
   built with `--enable-gpl --enable-version3`. The exact version and build configuration are in
   `licenses/ffmpeg/ffmpeg-version.txt`.
 - **Source code:**
-  - FFmpeg: <https://ffmpeg.org/download.html> (release archives at <https://ffmpeg.org/releases/>)
+  - FFmpeg: the source of the bundled version is included as `licenses/ffmpeg/ffmpeg-<version>.tar.xz`. All
+    releases are also at <https://ffmpeg.org/releases/>.
   - The external libraries it's built with (x264, x265, libmp3lame, …) are listed in the build configuration, and
     each has its own project page.
 - **How yummy-dl uses it:** yummy-dl runs `ffmpeg.exe` as a separate program. It isn't linked into yummy-dl, so the

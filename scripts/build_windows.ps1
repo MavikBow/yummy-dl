@@ -5,14 +5,16 @@
     yummy-dl.exe                    command-line tool (single file)
     ffmpeg.exe                      with -BundleFfmpeg
     LICENSE, THIRD-PARTY-NOTICES.md, licenses\   licence texts for yummy-dl and everything bundled
+    licenses\ffmpeg\ffmpeg-*.tar.xz  FFmpeg source code, with -FfmpegSource (the GPL asks for it)
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
-  powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1 -BundleFfmpeg [-FfmpegPath C:\...\ffmpeg.exe]
+  powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1 -BundleFfmpeg [-FfmpegPath C:\...\ffmpeg.exe] [-FfmpegSource C:\...\ffmpeg-8.0.1.tar.xz]
 #>
 param(
     [switch]$BundleFfmpeg,
     [string]$FfmpegPath = "",
+    [string]$FfmpegSource = "",
     [string]$Python = "python"
 )
 $ErrorActionPreference = "Stop"
@@ -65,6 +67,10 @@ if ($BundleFfmpeg) {
 # Licence texts of everything bundled (Qt, ffmpeg, Python, packages), at the versions just built.
 & $py @licenseArgs
 if ($LASTEXITCODE) { throw "collecting licences failed" }
+if ($FfmpegSource) {
+    if (-not $BundleFfmpeg) { throw "-FfmpegSource only makes sense with -BundleFfmpeg" }
+    Copy-Item $FfmpegSource "$stage\licenses\ffmpeg\" -Force
+}
 
 $zip = "dist\yummy-dl-windows.zip"
 if (Test-Path $zip) { Remove-Item $zip }

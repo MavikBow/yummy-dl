@@ -26,10 +26,19 @@ jobs:
         run: |
           Invoke-WebRequest https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile ffmpeg.zip
           Expand-Archive ffmpeg.zip -DestinationPath ffmpeg
-          "FFMPEG=$((Get-ChildItem ffmpeg -Recurse -Filter ffmpeg.exe | Select-Object -First 1).FullName)" >> $env:GITHUB_ENV
+          $exe = (Get-ChildItem ffmpeg -Recurse -Filter ffmpeg.exe | Select-Object -First 1).FullName
+          "FFMPEG=$exe" >> $env:GITHUB_ENV
+      - name: Fetch the matching FFmpeg source (GPL)
+        shell: pwsh
+        run: |
+          $line = (& $env:FFMPEG -hide_banner -version | Select-Object -First 1)
+          if ($line -notmatch '^ffmpeg version (\d+(\.\d+)+)') { throw "can't read ffmpeg version from: $line" }
+          $name = "ffmpeg-$($Matches[1]).tar.xz"
+          Invoke-WebRequest "https://ffmpeg.org/releases/$name" -OutFile $name
+          "FFMPEG_SOURCE=$((Resolve-Path $name).Path)" >> $env:GITHUB_ENV
       - name: Build
         shell: pwsh
-        run: ./scripts/build_windows.ps1 -BundleFfmpeg -FfmpegPath $env:FFMPEG
+        run: ./scripts/build_windows.ps1 -BundleFfmpeg -FfmpegPath $env:FFMPEG -FfmpegSource $env:FFMPEG_SOURCE
       - uses: actions/upload-artifact@v7
         with:
           name: yummy-dl-windows

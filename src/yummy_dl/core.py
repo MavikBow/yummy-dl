@@ -10,6 +10,7 @@ import httpx
 
 from . import dash, direct, hls
 from .extractors import EXTRACTORS, UNSUPPORTED_REASONS, ExtractError, find_extractor
+from .i18n import _, ngettext
 from .models import Anime, Video
 from .naming import episode_filename, episode_number, sanitize
 
@@ -60,8 +61,9 @@ def unsupported_note(options: list[DubOption]) -> str | None:
     if not missing:
         return None
     players = sorted({p for o in missing for p in o.by_player})
-    named = ", ".join(f"{p} ({UNSUPPORTED_REASONS[p]})" if p in UNSUPPORTED_REASONS else p for p in players)
-    return f"{len(missing)} dub(s) only on unsupported players: {named}"
+    named = ", ".join(f"{p} ({_(UNSUPPORTED_REASONS[p])})" if p in UNSUPPORTED_REASONS else p for p in players)
+    return ngettext("{n} dub only on unsupported players: {players}",
+                    "{n} dubs only on unsupported players: {players}", len(missing), players=named)
 
 
 def find_dub(options: list[DubOption], query: str) -> DubOption | None:
@@ -87,13 +89,13 @@ def parse_episodes(spec: str | None, available: list[str]) -> list[str]:
                 lo_f = float(lo) if lo else float("-inf")
                 hi_f = float(hi) if hi else float("inf")
             except ValueError:
-                raise ValueError(f"bad episode range: {part!r}") from None
+                raise ValueError(_("bad episode range: '{part}'", part=part)) from None
             wanted.update(n for n in available if _ep_key(n)[0] == 0 and lo_f <= float(n) <= hi_f)
         else:
             match = [n for n in available if n == part or (_ep_key(n)[0] == 0 and _ep_key(part)[0] == 0
                                                          and float(n) == float(part))]
             if not match:
-                raise ValueError(f"episode {part} is not available")
+                raise ValueError(_("episode {ep} is not available", ep=part))
             wanted.update(match)
     return [n for n in available if n in wanted]
 
@@ -165,7 +167,7 @@ def download_episode(
     """Download one episode. Returns (written path, actual quality)."""
     extractor = find_extractor(video)
     if extractor is None:
-        raise ExtractError(f"player {video.player_name!r} is not supported yet")
+        raise ExtractError(_("player '{player}' is not supported yet", player=video.player_name))
     own = http is None
     http = http or httpx.Client(timeout=60, follow_redirects=True)
     try:

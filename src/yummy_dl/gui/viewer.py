@@ -6,6 +6,8 @@ from PySide6.QtCore import QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPixmap
 from PySide6.QtWidgets import QDialog, QLabel, QWidget
 
+from ..i18n import _
+
 
 class ClickableLabel(QLabel):
     clicked = Signal()
@@ -24,7 +26,7 @@ class ImageViewer(QDialog):
         super().__init__(parent, Qt.FramelessWindowHint | Qt.Window)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setCursor(Qt.PointingHandCursor)
-        self.setWindowTitle(caption or "Poster")
+        self.setWindowTitle(caption or _("Poster"))
         self._pixmap = pixmap
         self._scaled: QPixmap | None = None
         self._caption = caption
@@ -62,8 +64,9 @@ class ImageViewer(QDialog):
             y = (self._area().height() - img.height()) // 2
             p.drawPixmap(x, y, img)
         p.setPen(QColor(170, 170, 170))
-        hint = "Loading full resolution…   " if self.loading else ""
-        text = f"{self._caption}   ·   {hint}click or press Esc to close" if self._caption else f"{hint}click or press Esc to close"
+        hint = _("Loading full resolution…") + "   " if self.loading else ""
+        close = _("click or press Esc to close")
+        text = f"{self._caption}   ·   {hint}{close}" if self._caption else f"{hint}{close}"
         p.drawText(QRect(0, self.height() - CAPTION_H, self.width(), CAPTION_H), Qt.AlignCenter, text)
 
     def resizeEvent(self, event) -> None:

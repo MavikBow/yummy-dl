@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ..i18n import N_
 from ..models import Video
 from .base import ExtractError, Extractor
 from .aksor import AksorExtractor
@@ -12,7 +13,7 @@ EXTRACTORS: list[Extractor] = [CvhExtractor(), KodikExtractor(), AksorExtractor(
 
 # Players we deliberately don't support, with the reason shown to the user.
 UNSUPPORTED_REASONS = {
-    "Alloha": "protected by an anti-bot challenge",
+    "Alloha": N_("protected by an anti-bot challenge"),
 }
 
 

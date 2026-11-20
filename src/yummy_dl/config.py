@@ -23,6 +23,7 @@ class Config:
     quality: int = 720
     workers: int = 8
     theme: str = ""  # "" = follow system, "dark", "light" (GUI only)
+    language: str = ""  # "" = follow system, "en", "ru"
 
     @property
     def effective_token(self) -> str | None:

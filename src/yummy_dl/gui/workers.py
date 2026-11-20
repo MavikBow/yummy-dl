@@ -15,6 +15,7 @@ from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
 
 from .. import core
 from .. import scripts as scriptmod
+from ..i18n import N_, _
 from ..models import Anime, Video
 
 
@@ -62,8 +63,9 @@ def run_bg(fn: Callable[[], object], on_done: Callable[[object], None], on_fail:
 
 # --- download queue ------------------------------------------------------------
 
-QUEUED, RUNNING, DONE, SKIPPED, FAILED, CANCELLED = "Queued", "Downloading", "Done", "Exists", "Failed", "Cancelled"
-CONVERTING = "Running script"
+# Status codes double as English display text; the window shows them through _().
+QUEUED, RUNNING, DONE, SKIPPED = N_("Queued"), N_("Downloading"), N_("Done"), N_("Exists")
+FAILED, CANCELLED, CONVERTING = N_("Failed"), N_("Cancelled"), N_("Running script")
 ACTIVE = (QUEUED, RUNNING, CONVERTING)
 FINISHED = (DONE, SKIPPED, FAILED, CANCELLED)
 
@@ -131,7 +133,7 @@ class DownloadManager(QObject):
                                             workers=job.workers, progress=on_progress, http=http)
         except core.Cancelled:
             job.status = CANCELLED
-            self.status.emit(job.id, CANCELLED, "partial download kept, re-add to resume")
+            self.status.emit(job.id, CANCELLED, _("partial download kept, re-add to resume"))
         except Exception as e:  # anything else must not kill the queue thread
             job.status = FAILED
             self.status.emit(job.id, FAILED, str(e) or type(e).__name__)
@@ -195,11 +197,11 @@ class ScriptManager(QObject):
             out = scriptmod.run_script(job.script, job.input, progress=on_progress)
         except core.Cancelled:
             job.status = CANCELLED
-            self.status.emit(job.id, CANCELLED, "original kept")
+            self.status.emit(job.id, CANCELLED, _("original kept"))
         except Exception as e:  # never kill the thread
             job.status = FAILED
-            self.status.emit(job.id, FAILED, f"{e or type(e).__name__} (original kept)")
+            self.status.emit(job.id, FAILED, f"{e or type(e).__name__} " + _("(original kept)"))
         else:
             job.status, job.result = DONE, out[0]
-            more = f" (+{len(out) - 1} more)" if len(out) > 1 else ""
+            more = " " + _("(+{n} more)", n=len(out) - 1) if len(out) > 1 else ""
             self.status.emit(job.id, DONE, f"{out[0].name}{more}")

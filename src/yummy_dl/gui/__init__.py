@@ -37,6 +37,23 @@ def _qt_import_hint(e: ImportError) -> str:
     return msg
 
 
+def _install_qt_translation(app) -> None:
+    """Qt's own strings (Yes/No/Cancel, Save/Close, context menus) in the app's language."""
+    from PySide6.QtCore import QLibraryInfo, QLocale, QTranslator
+
+    from .. import i18n
+
+    if i18n.current() == "en":
+        return
+    tr = QTranslator(app)
+    import PySide6
+
+    folders = [QLibraryInfo.path(QLibraryInfo.TranslationsPath), str(Path(PySide6.__file__).parent / "translations")]
+    if any(tr.load(QLocale(i18n.current()), "qtbase", "_", d) for d in folders):
+        app.installTranslator(tr)
+        app._qt_translator = tr  # keep a reference
+
+
 def main() -> int:
     try:
         from PySide6.QtWidgets import QApplication
@@ -44,16 +61,20 @@ def main() -> int:
         print(_qt_import_hint(e), file=sys.stderr)
         return 1
     from .. import config as cfgmod
+    from .. import i18n
     from . import theme
     from .window import MainWindow
 
     from PySide6.QtGui import QIcon
 
     _windows_app_id()
+    cfg = cfgmod.load()
+    i18n.set_language(i18n.resolve(cfg.language))
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName("yummy-dl")
     app.setWindowIcon(QIcon(asset("logo.png")))
-    theme.apply(app, theme.resolve(cfgmod.load().theme))
+    _install_qt_translation(app)
+    theme.apply(app, theme.resolve(cfg.theme))
     win = MainWindow()
     win.show()
     if os.environ.get("YUMMY_EXIT_AFTER_SHOW"):  # startup-time measurement: quit once the window is up

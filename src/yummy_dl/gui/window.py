@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt, QTimer, QUrl
-from PySide6.QtGui import QAction, QDesktopServices, QIcon, QKeySequence, QPalette, QPixmap
+from PySide6.QtCore import QProcess, QSize, Qt, QTimer, QUrl
+from PySide6.QtGui import QAction, QActionGroup, QDesktopServices, QIcon, QKeySequence, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -32,10 +33,11 @@ from PySide6.QtWidgets import (
 )
 
 from .. import config as cfgmod
-from .. import core, hls
+from .. import core, hls, i18n
 from .. import scripts as scriptmod
 from ..api import YummyClient
 from ..extractors import EXTRACTORS, find_extractor
+from ..i18n import _, ngettext
 from ..models import Anime, Video
 from . import help as helpdlg
 from . import theme
@@ -58,7 +60,6 @@ from .workers import (
 
 QUALITIES = [1080, 720, 480, 360]
 POSTER_W, POSTER_H = 160, 224
-AUTO = "Auto"
 
 
 class MainWindow(QMainWindow):
@@ -97,28 +98,37 @@ class MainWindow(QMainWindow):
     # --- layout -------------------------------------------------------------
 
     def _build_menu(self) -> None:
-        menu = self.menuBar().addMenu("&Settings")
-        act = QAction("API &token…", self)
+        menu = self.menuBar().addMenu(_("&Settings"))
+        act = QAction(_("API &token…"), self)
         act.triggered.connect(self._set_token)
         menu.addAction(act)
-        self.dark_act = QAction("&Dark theme", self, checkable=True)
+        self.dark_act = QAction(_("&Dark theme"), self, checkable=True)
         self.dark_act.setChecked(theme.resolve(self.cfg.theme))
         self.dark_act.toggled.connect(self._toggle_dark)
         menu.addAction(self.dark_act)
+        lang_menu = menu.addMenu(_("&Language"))
+        group = QActionGroup(self)
+        system = i18n.LANGUAGES[i18n.system_language()]
+        for code, label in [("", _("System default ({lang})", lang=system)), *i18n.LANGUAGES.items()]:
+            act = QAction(label, self, checkable=True)
+            act.setChecked(self.cfg.language == code)
+            act.triggered.connect(lambda _c=False, code=code: self._set_language(code))
+            group.addAction(act)
+            lang_menu.addAction(act)
         menu.addSeparator()
-        act = QAction("Open &config folder", self)
+        act = QAction(_("Open &config folder"), self)
         act.triggered.connect(lambda: self._open(cfgmod.config_path().parent))
         menu.addAction(act)
 
-        self.scripts_menu = self.menuBar().addMenu("S&cripts")
+        self.scripts_menu = self.menuBar().addMenu(_("S&cripts"))
         self._rebuild_scripts_menu()
 
-        help_menu = self.menuBar().addMenu("&Help")
+        help_menu = self.menuBar().addMenu(_("&Help"))
         for text, tab, key in (
-            ("&Quick start", helpdlg.TAB_START, QKeySequence.HelpContents),
-            ("Set up API &token…", helpdlg.TAB_TOKEN, None),
-            ("&Command-line usage", helpdlg.TAB_CLI, None),
-            ("&About yummy-dl", helpdlg.TAB_ABOUT, None),
+            (_("&Quick start"), helpdlg.TAB_START, QKeySequence.HelpContents),
+            (_("Set up API &token…"), helpdlg.TAB_TOKEN, None),
+            (_("&Command-line usage"), helpdlg.TAB_CLI, None),
+            (_("&About yummy-dl"), helpdlg.TAB_ABOUT, None),
         ):
             act = QAction(text, self)
             if key is not None:
@@ -128,9 +138,9 @@ class MainWindow(QMainWindow):
 
     def _build_ui(self) -> None:
         # search bar
-        self.search_edit = QLineEdit(placeholderText="Search anime, e.g. берсерк or Re:Zero")
+        self.search_edit = QLineEdit(placeholderText=_("Search anime, e.g. берсерк or Re:Zero"))
         self.search_edit.returnPressed.connect(self._search)
-        search_btn = QPushButton("Search")
+        search_btn = QPushButton(_("Search"))
         search_btn.clicked.connect(self._search)
         top = QHBoxLayout()
         top.addWidget(self.search_edit, 1)
@@ -142,7 +152,7 @@ class MainWindow(QMainWindow):
         self.results.currentItemChanged.connect(self._on_result_selected)
 
         # details
-        self.title_lbl = QLabel("Search for a title to begin.")
+        self.title_lbl = QLabel(_("Search for a title to begin."))
         self.title_lbl.setWordWrap(True)
         f = self.title_lbl.font()
         f.setPointSize(f.pointSize() + 3)
@@ -154,7 +164,7 @@ class MainWindow(QMainWindow):
         self.poster = ClickableLabel()
         self.poster.setFixedSize(POSTER_W, POSTER_H)
         self.poster.setCursor(Qt.PointingHandCursor)
-        self.poster.setToolTip("Click to view full screen")
+        self.poster.setToolTip(_("Click to view full screen"))
         self.poster.clicked.connect(self._open_poster)
         self.poster.setAlignment(Qt.AlignCenter)
         self._show_logo()
@@ -172,26 +182,26 @@ class MainWindow(QMainWindow):
 
         self.out_edit = QLineEdit(str(self.cfg.effective_output_dir))
         self.out_edit.editingFinished.connect(self._save_prefs)
-        browse = QPushButton("Browse…")
+        browse = QPushButton(_("Browse…"))
         browse.clicked.connect(self._browse)
         out_row = QHBoxLayout()
         out_row.addWidget(self.out_edit, 1)
         out_row.addWidget(browse)
 
         form = QFormLayout()
-        form.addRow("Dub:", self.dub_combo)
-        form.addRow("Player:", self.player_combo)
-        form.addRow("Max quality:", self.quality_combo)
-        form.addRow("Save to:", out_row)
+        form.addRow(_("Dub:"), self.dub_combo)
+        form.addRow(_("Player:"), self.player_combo)
+        form.addRow(_("Max quality:"), self.quality_combo)
+        form.addRow(_("Save to:"), out_row)
 
         self.episodes = QListWidget()
         self.episodes.itemChanged.connect(self._update_selection_label)
-        all_btn = QPushButton("All")
+        all_btn = QPushButton(_("All"))
         all_btn.clicked.connect(lambda: self._check_all(True))
-        none_btn = QPushButton("None")
+        none_btn = QPushButton(_("None"))
         none_btn.clicked.connect(lambda: self._check_all(False))
         self.sel_lbl = QLabel("")
-        self.add_btn = QPushButton("Download selected")
+        self.add_btn = QPushButton(_("Download selected"))
         self.add_btn.setDefault(True)
         self.add_btn.clicked.connect(self._enqueue)
         ep_btns = QHBoxLayout()
@@ -211,7 +221,7 @@ class MainWindow(QMainWindow):
         header.addWidget(self.poster, 0, Qt.AlignTop)
         header.addLayout(info, 1)
         dl.addLayout(header)
-        dl.addWidget(QLabel("Episodes:"))
+        dl.addWidget(QLabel(_("Episodes:")))
         dl.addWidget(self.episodes, 1)
         dl.addLayout(ep_btns)
 
@@ -222,7 +232,7 @@ class MainWindow(QMainWindow):
 
         # queue
         self.queue = QTableWidget(0, 5)
-        self.queue.setHorizontalHeaderLabels(["Title", "Episode", "Dub", "Progress", "Status"])
+        self.queue.setHorizontalHeaderLabels([_("Title"), _("Episode"), _("Dub"), _("Progress"), _("Status")])
         self.queue.verticalHeader().hide()
         self.queue.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.queue.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -236,14 +246,14 @@ class MainWindow(QMainWindow):
         h.resizeSection(3, 200)
         h.setSectionResizeMode(4, QHeaderView.Stretch)
 
-        cancel_btn = QPushButton("Cancel selected")
+        cancel_btn = QPushButton(_("Cancel selected"))
         cancel_btn.clicked.connect(self._cancel_selected)
-        clear_btn = QPushButton("Clear finished")
+        clear_btn = QPushButton(_("Clear finished"))
         clear_btn.clicked.connect(self._clear_finished)
-        open_btn = QPushButton("Open folder")
+        open_btn = QPushButton(_("Open folder"))
         open_btn.clicked.connect(lambda: self._open(Path(self.out_edit.text())))
         qbtns = QHBoxLayout()
-        qbtns.addWidget(QLabel("Queue (double-click to open, right-click to run a script):"), 1)
+        qbtns.addWidget(QLabel(_("Queue (double-click to open, right-click to run a script):")), 1)
         qbtns.addWidget(cancel_btn)
         qbtns.addWidget(clear_btn)
         qbtns.addWidget(open_btn)
@@ -287,7 +297,7 @@ class MainWindow(QMainWindow):
 
     def _refresh_ffmpeg_status(self) -> None:
         if not hls.find_ffmpeg():
-            self.statusBar().addPermanentWidget(QLabel("ffmpeg not found: Kodik saves as .ts, Aksor won't work"))
+            self.statusBar().addPermanentWidget(QLabel(_("ffmpeg not found: Kodik saves as .ts, Aksor won't work")))
 
     def _out_dir(self) -> Path:
         return Path(self.out_edit.text().strip() or self.cfg.effective_output_dir).expanduser()
@@ -341,7 +351,7 @@ class MainWindow(QMainWindow):
         self._poster_anime = anime
         self.poster.clear()
         self.poster.setCursor(Qt.PointingHandCursor)
-        self.poster.setToolTip("Click to view full screen")
+        self.poster.setToolTip(_("Click to view full screen"))
         self.poster.show()
 
         def show(data: bytes) -> None:
@@ -383,7 +393,7 @@ class MainWindow(QMainWindow):
             return
         self._req += 1
         req = self._req
-        self._status(f"Searching “{q}”…")
+        self._status(_("Searching “{query}”…", query=q))
         self.results.clear()
 
         def done(results: list[Anime]) -> None:
@@ -396,7 +406,7 @@ class MainWindow(QMainWindow):
                 self.results.addItem(item)
                 if url := a.poster("small", "medium"):
                     self._load_image(url, lambda data, it=item: it.setIcon(QIcon(self._pixmap(data))))
-            self._status(f"{len(results)} result(s)" if results else "Nothing found", 5000)
+            self._status(ngettext("{n} result", "{n} results", len(results)) if results else _("Nothing found"), 5000)
 
         run_bg(lambda: self.api.search(q, limit=30), done, self._error)
 
@@ -408,7 +418,7 @@ class MainWindow(QMainWindow):
         req = self._req
         self.anime = None
         self.title_lbl.setText(a.title)
-        self.sub_lbl.setText("Loading…")
+        self.sub_lbl.setText(_("Loading…"))
         self._show_poster(a, req)
         self.dub_combo.clear()
         self.episodes.clear()
@@ -429,7 +439,7 @@ class MainWindow(QMainWindow):
         self.anime = anime
         bits = [str(anime.year or ""), anime.type, anime.status]
         if anime.episodes:
-            bits.append(f"{anime.episodes} ep.")
+            bits.append(_("{n} ep.", n=anime.episodes))
         others = ", ".join(anime.other_titles[:2])
         self.sub_lbl.setText(" · ".join(b for b in bits if b) + (f"\n{others}" if others else ""))
         options = core.group_by_dub(videos)
@@ -440,10 +450,10 @@ class MainWindow(QMainWindow):
         self.dub_combo.clear()
         for d in self.dubs:
             players = ", ".join(sorted(n for n, vids in d.by_player.items() if any(find_extractor(v) for v in vids)))
-            self.dub_combo.addItem(f"{d.dub_name}  —  {len(d.supported_episodes)} ep. · {players}")
+            self.dub_combo.addItem(f"{d.dub_name}  —  " + _("{n} ep.", n=len(d.supported_episodes)) + f" · {players}")
         self.dub_combo.blockSignals(False)
         if not self.dubs:
-            self.sub_lbl.setText(self.sub_lbl.text() + "\nNo downloadable dubs (supported: CVH, Kodik, Aksor).")
+            self.sub_lbl.setText(self.sub_lbl.text() + "\n" + _("No downloadable dubs (supported: CVH, Kodik, Aksor)."))
             return
         self._set_details_enabled(True)
         self._on_dub_changed()
@@ -457,17 +467,16 @@ class MainWindow(QMainWindow):
         self.player_combo.blockSignals(True)
         self.player_combo.clear()
         if dub:
-            self.player_combo.addItem(AUTO)
+            self.player_combo.addItem(_("Auto"), None)
             supported = {e.name for e in EXTRACTORS}
             for name in sorted(dub.by_player):
                 if name in supported:
-                    self.player_combo.addItem(name)
+                    self.player_combo.addItem(name, name)
         self.player_combo.blockSignals(False)
         self._fill_episodes()
 
     def _player(self) -> str | None:
-        p = self.player_combo.currentText()
-        return None if p in ("", AUTO) else p
+        return self.player_combo.currentData()
 
     def _picks(self) -> dict[str, Video]:
         dub = self._current_dub()
@@ -486,7 +495,8 @@ class MainWindow(QMainWindow):
             out = self._out_dir()
             for ep, video in self._picks().items():
                 have = core.existing_download(core.episode_path(self.anime, video, out))
-                item = QListWidgetItem(f"Episode {ep}   [{video.player_name}]" + ("   ✓ downloaded" if have else ""))
+                item = QListWidgetItem(_("Episode {ep}", ep=ep) + f"   [{video.player_name}]"
+                                       + ("   " + _("✓ downloaded") if have else ""))
                 item.setData(Qt.UserRole, ep)
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 item.setCheckState(Qt.Unchecked if have else Qt.Checked)
@@ -507,15 +517,51 @@ class MainWindow(QMainWindow):
 
     def _update_selection_label(self, *_args) -> None:
         n = len(self._checked())
-        self.sel_lbl.setText(f"{n} of {self.episodes.count()} selected")
+        self.sel_lbl.setText(_("{n} of {total} selected", n=n, total=self.episodes.count()))
         self.add_btn.setEnabled(n > 0)
 
     def _browse(self) -> None:
-        d = QFileDialog.getExistingDirectory(self, "Download folder", str(self._out_dir()))
+        d = QFileDialog.getExistingDirectory(self, _("Download folder"), str(self._out_dir()))
         if d:
             self.out_edit.setText(d)
             self._save_prefs()
             self._fill_episodes()
+
+    def _set_language(self, code: str) -> None:
+        if code == self.cfg.language:
+            return
+        self.cfg.language = code
+        cfgmod.save(self.cfg)
+        new = i18n.resolve(code)
+        if new == i18n.current():
+            return  # e.g. "System default" while the system language is already in use
+        # Ask in the language being switched to, so the user can read the question either way.
+        old = i18n.current()
+        i18n.set_language(new)
+        question = _("Restart yummy-dl now to switch the language?")
+        active = [j for j in self.jobs.values() if j.status in ACTIVE]
+        if active:
+            question += "\n\n" + ngettext(
+                "{n} job is still running and will be stopped (downloads resume when re-added).",
+                "{n} jobs are still running and will be stopped (downloads resume when re-added).", len(active))
+        later = _("The new language will be used the next time you start the app.")
+        restart = QMessageBox.question(self, "yummy-dl", question) == QMessageBox.Yes
+        if not restart:
+            QMessageBox.information(self, "yummy-dl", later)
+        i18n.set_language(old)  # the running window keeps one language until the restart
+        if restart:
+            self._restart()
+
+    def _restart(self) -> None:
+        if getattr(sys, "frozen", False):
+            program, args = sys.executable, sys.argv[1:]
+        else:
+            program, args = sys.executable, ["-m", "yummy_dl.gui", *sys.argv[1:]]
+        if not QProcess.startDetached(program, args):
+            self._error(_("Couldn't restart automatically. Please start yummy-dl again."))
+            return
+        self._restarting = True
+        self.close()
 
     def _set_token(self) -> None:
         self._show_help(helpdlg.TAB_TOKEN)
@@ -528,7 +574,7 @@ class MainWindow(QMainWindow):
         cfgmod.save(self.cfg)
         self.api.close()
         self.api = YummyClient(token=self.cfg.effective_token)
-        self._status("Token saved" if tok else "Token removed", 4000)
+        self._status(_("Token saved") if tok else _("Token removed"), 4000)
 
     # --- queue --------------------------------------------------------------
 
@@ -555,7 +601,7 @@ class MainWindow(QMainWindow):
             self.queue.setCellWidget(row, 3, bar)
             self.queue.setItem(row, 4, QTableWidgetItem(QUEUED))
             self.manager.add(job)
-        self._status(f"Queued {len(wanted)} episode(s)", 4000)
+        self._status(ngettext("Queued {n} episode", "Queued {n} episodes", len(wanted)), 4000)
 
     def _row(self, job_id: int) -> int:
         for r in range(self.queue.rowCount()):
@@ -576,7 +622,7 @@ class MainWindow(QMainWindow):
         bar: QProgressBar = self.queue.cellWidget(r, 3)
         if status in (DONE, SKIPPED):
             bar.setValue(100)
-        item = QTableWidgetItem(f"{status}: {detail}" if detail else status)
+        item = QTableWidgetItem(f"{_(status)}: {detail}" if detail else _(status))
         item.setToolTip(detail)
         if status == FAILED:
             item.setForeground(Qt.red)
@@ -597,7 +643,7 @@ class MainWindow(QMainWindow):
             if item.data(Qt.UserRole) == job.video.number and job.video.player_name in item.text():
                 if "✓" not in item.text():
                     self.episodes.blockSignals(True)
-                    item.setText(item.text() + "   ✓ downloaded")
+                    item.setText(item.text() + "   " + _("✓ downloaded"))
                     item.setCheckState(Qt.Unchecked)
                     self.episodes.blockSignals(False)
                     self._update_selection_label()
@@ -610,7 +656,7 @@ class MainWindow(QMainWindow):
                 job.cancel.set()
                 if job.status == QUEUED:
                     job.status = CANCELLED
-                    self.queue.setItem(r, 4, QTableWidgetItem(CANCELLED))
+                    self.queue.setItem(r, 4, QTableWidgetItem(_(CANCELLED)))
 
     def _clear_finished(self) -> None:
         for r in reversed(range(self.queue.rowCount())):
@@ -630,64 +676,67 @@ class MainWindow(QMainWindow):
         menu = self.scripts_menu
         menu.clear()
         menu.setToolTipsVisible(True)
-        act = menu.addAction("&Manage scripts…")
+        act = menu.addAction(_("&Manage scripts…"))
         act.triggered.connect(self._manage_scripts)
         if not self.scripts:
             menu.addSeparator()
-            hint = menu.addAction("No scripts yet: add one in Manage scripts…")
+            hint = menu.addAction(_("No scripts yet: add one in Manage scripts…"))
             hint.setEnabled(False)
             return
         menu.addSeparator()
         for script in self.scripts:
-            sub = menu.addMenu(script.name + ("   (auto)" if script.auto else ""))
+            sub = menu.addMenu(script.name + ("   " + _("(auto)") if script.auto else ""))
             sub.menuAction().setToolTip(script.comment)
             sub.menuAction().setStatusTip(script.comment)
-            a = sub.addAction("Run on &files…")
+            a = sub.addAction(_("Run on &files…"))
             a.triggered.connect(lambda _c=False, s=script: self._run_on_files(s))
-            a = sub.addAction("Run on a f&older…")
+            a = sub.addAction(_("Run on a f&older…"))
             a.triggered.connect(lambda _c=False, s=script: self._run_on_folder(s))
 
     def _manage_scripts(self) -> None:
         if self._scripts_error:
-            self._error(f"{self._scripts_error}\nIt will be overwritten when you save.")
+            self._error(f"{self._scripts_error}\n" + _("It will be overwritten when you save."))
             self._scripts_error = ""
 
         def saved(scripts: list[scriptmod.Script]) -> None:
             self.scripts = scripts
             self._rebuild_scripts_menu()
-            self._status("Scripts saved", 4000)
+            self._status(_("Scripts saved"), 4000)
 
         ScriptsDialog(self, self.scripts, saved).exec()
 
     def _run_on_files(self, script: scriptmod.Script) -> None:
         exts = " ".join(f"*{e}" for e in sorted(core.VIDEO_EXTS))
-        files, _ = QFileDialog.getOpenFileNames(self, f"Run '{script.name}' on…", str(self._out_dir()),
-                                                f"Videos ({exts});;All files (*)")
+        files, _filter = QFileDialog.getOpenFileNames(
+            self, _("Run '{name}' on…", name=script.name), str(self._out_dir()),
+            _("Videos ({exts});;All files (*)", exts=exts))
         if files:
             self._run_script(script, [Path(f) for f in files])
 
     def _run_on_folder(self, script: scriptmod.Script) -> None:
-        d = QFileDialog.getExistingDirectory(self, f"Run '{script.name}' on every video in…", str(self._out_dir()))
+        d = QFileDialog.getExistingDirectory(self, _("Run '{name}' on every video in…", name=script.name),
+                                             str(self._out_dir()))
         if d:
             self._run_script(script, [Path(d)])
 
     def _run_script(self, script: scriptmod.Script, paths: list[Path], confirm: bool = True) -> None:
         if not hls.find_ffmpeg():
-            self._error("Scripts need ffmpeg, and it wasn't found.\n"
-                        "Windows: run  winget install ffmpeg  or put ffmpeg.exe next to yummy-dl-gui.exe.")
+            self._error(_("Scripts need ffmpeg, and it wasn't found.\n"
+                          "Windows: run  winget install ffmpeg  or put ffmpeg.exe next to yummy-dl-gui.exe."))
             return
         busy = {j.input for j in self.jobs.values() if isinstance(j, ScriptJob) and j.status in ACTIVE}
         inputs = [p for p in scriptmod.collect_inputs(paths) if p not in busy]
         if not inputs:
-            self._error("No video files found there (or they're already queued).")
+            self._error(_("No video files found there (or they're already queued)."))
             return
         if confirm and self._confirm_delete:
-            box = QMessageBox(QMessageBox.Question, "Run script",
-                              f"Run '{script.name}' on {len(inputs)} file(s)?\n\n"
-                              "Each original is deleted after its conversion succeeds. "
-                              "If ffmpeg fails, the original is kept.",
+            box = QMessageBox(QMessageBox.Question, _("Run script"),
+                              ngettext("Run '{name}' on {n} file?", "Run '{name}' on {n} files?", len(inputs),
+                                       name=script.name) + "\n\n"
+                              + _("Each original is deleted after its conversion succeeds. "
+                                  "If ffmpeg fails, the original is kept."),
                               QMessageBox.Yes | QMessageBox.Cancel, self)
-            box.setCheckBox(QCheckBox("Don't ask again until I restart the app"))
+            box.setCheckBox(QCheckBox(_("Don't ask again until I restart the app")))
             if box.exec() != QMessageBox.Yes:
                 return
             self._confirm_delete = not box.checkBox().isChecked()
@@ -710,7 +759,8 @@ class MainWindow(QMainWindow):
             self.queue.setCellWidget(row, 3, bar)
             self.queue.setItem(row, 4, QTableWidgetItem(QUEUED))
             self.script_mgr.add(job)
-        self._status(f"Queued '{script.name}' on {len(inputs)} file(s)", 4000)
+        self._status(ngettext("Queued '{name}' on {n} file", "Queued '{name}' on {n} files", len(inputs),
+                              name=script.name), 4000)
 
     def _queue_menu(self, pos) -> None:
         item = self.queue.itemAt(pos)
@@ -723,21 +773,21 @@ class MainWindow(QMainWindow):
             if job and job.status in (DONE, SKIPPED) and job.result and job.result.is_file():
                 files.append(job.result)
         menu = QMenu(self)
-        sub = menu.addMenu("Run script")
+        sub = menu.addMenu(_("Run script"))
         sub.setEnabled(bool(files and self.scripts))
         for script in self.scripts:
             a = sub.addAction(script.name)
             a.triggered.connect(lambda _c=False, s=script: self._run_script(s, files))
-        menu.addAction("Open folder", lambda: self._open_job(self.queue.indexFromItem(item)))
+        menu.addAction(_("Open folder"), lambda: self._open_job(self.queue.indexFromItem(item)))
         menu.exec(self.queue.viewport().mapToGlobal(pos))
 
     def closeEvent(self, event) -> None:
         active = [j for j in self.jobs.values() if j.status in ACTIVE]
-        if active:
+        if active and not getattr(self, "_restarting", False):
             ans = QMessageBox.question(
                 self, "yummy-dl",
-                f"{len(active)} job(s) still running. Quit anyway?\n"
-                "(Partial downloads resume next time; unfinished scripts keep the original file.)")
+                ngettext("{n} job still running. Quit anyway?", "{n} jobs still running. Quit anyway?", len(active))
+                + "\n" + _("(Partial downloads resume next time; unfinished scripts keep the original file.)"))
             if ans != QMessageBox.Yes:
                 event.ignore()
                 return

@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from .. import __version__
+from ..i18n import _
 from .. import config as cfgmod
 from .. import hls
 
@@ -50,47 +51,52 @@ def cli_dir() -> Path | None:
 
 
 def cli_reference(cmd: str) -> str:
-    return f"""\
-# Find a title
-{cmd} search "берсерк"
+    def c(text: str) -> str:
+        return "# " + text
 
-# Show dubs, episodes and players for a title (id, alias or text)
-{cmd} info berserk
-
-# Download: asks which dub and episodes if you leave them out
-{cmd} download berserk
-
-# Download non-interactively
-{cmd} download berserk -d "MC Entertainment" -e 1-5,8 -q 720 -o D:\\Anime
-
-#   -d / --dub        part of the dub name
-#   -e / --episodes   e.g. 1-5,8  (default: all)
-#   -q / --quality    max height: 1080, 720, 480, 360
-#   -o / --out        download folder
-#   -p / --player     cvh | kodik | aksor  (default: auto)
-#   -w / --workers    parallel connections
-
-# Guided mode (what double-clicking {cmd} does)
-{cmd} interactive
-
-# Settings
-{cmd} config set-token <TOKEN>
-{cmd} config set --output-dir D:\\Anime --quality 1080
-{cmd} config show
-
-# Scripts (saved ffmpeg commands; create them in Scripts -> Manage scripts...)
-{cmd} scripts list
-{cmd} scripts run "BBK 720p" D:\\Anime\\Berserk     # a folder or files; originals are replaced
-{cmd} download berserk -e 1-3 --script "BBK 720p"   # convert each new episode
-{cmd} download berserk --no-script                 # skip the auto-run script
-
-# Open this desktop app
-{cmd} gui
-
-# Built-in help for any command
-{cmd} --help
-{cmd} download --help
-"""
+    return "\n".join([
+        c(_("Find a title")),
+        f'{cmd} search "берсерк"',
+        "",
+        c(_("Show dubs, episodes and players for a title (id, alias or text)")),
+        f"{cmd} info berserk",
+        "",
+        c(_("Download: asks which dub and episodes if you leave them out")),
+        f"{cmd} download berserk",
+        "",
+        c(_("Download non-interactively")),
+        f'{cmd} download berserk -d "MC Entertainment" -e 1-5,8 -q 720 -o D:\\Anime',
+        "",
+        c("  -d / --dub        " + _("part of the dub name")),
+        c("  -e / --episodes   " + _("e.g. 1-5,8  (default: all)")),
+        c("  -q / --quality    " + _("max height: 1080, 720, 480, 360")),
+        c("  -o / --out        " + _("download folder")),
+        c("  -p / --player     cvh | kodik | aksor  " + _("(default: auto)")),
+        c("  -w / --workers    " + _("parallel connections")),
+        "",
+        c(_("Guided mode (what double-clicking {cmd} does)", cmd=cmd)),
+        f"{cmd} interactive",
+        "",
+        c(_("Settings")),
+        f"{cmd} config set-token <TOKEN>",
+        f"{cmd} config set --output-dir D:\\Anime --quality 1080",
+        f"{cmd} config set --language ru          " + c(_("auto, en or ru")),
+        f"{cmd} config show",
+        "",
+        c(_("Scripts (saved ffmpeg commands; create them in Scripts -> Manage scripts...)")),
+        f"{cmd} scripts list",
+        f'{cmd} scripts run "BBK 720p" D:\\Anime\\Berserk     ' + c(_("a folder or files; originals are replaced")),
+        f'{cmd} download berserk -e 1-3 --script "BBK 720p"   ' + c(_("convert each new episode")),
+        f"{cmd} download berserk --no-script                 " + c(_("skip the auto-run script")),
+        "",
+        c(_("Open this desktop app")),
+        f"{cmd} gui",
+        "",
+        c(_("Built-in help for any command")),
+        f"{cmd} --help",
+        f"{cmd} download --help",
+        "",
+    ])
 
 
 def _label(html: str) -> QLabel:
@@ -108,16 +114,16 @@ class HelpDialog(QDialog):
 
     def __init__(self, parent, cfg: cfgmod.Config, on_token_saved, tab: int = TAB_START) -> None:
         super().__init__(parent)
-        self.setWindowTitle("yummy-dl help")
+        self.setWindowTitle(_("yummy-dl help"))
         self.resize(680, 560)
         self.cfg = cfg
         self._on_token_saved = on_token_saved
 
         self.tabs = QTabWidget()
-        self.tabs.addTab(self._start_tab(), "Quick start")
-        self.tabs.addTab(self._token_tab(), "API token")
-        self.tabs.addTab(self._cli_tab(), "Command line")
-        self.tabs.addTab(self._about_tab(), "About")
+        self.tabs.addTab(self._start_tab(), _("Quick start"))
+        self.tabs.addTab(self._token_tab(), _("API token"))
+        self.tabs.addTab(self._cli_tab(), _("Command line"))
+        self.tabs.addTab(self._about_tab(), _("About"))
         self.tabs.setCurrentIndex(tab)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Close)
@@ -132,12 +138,12 @@ class HelpDialog(QDialog):
     def _start_tab(self) -> QWidget:
         ffmpeg = hls.find_ffmpeg()
         ffmpeg_line = (
-            "✓ ffmpeg found, so every player works."
+            _("✓ ffmpeg found, so every player works.")
             if ffmpeg else
-            "⚠ ffmpeg not found. Kodik episodes will be saved as <code>.ts</code>, and Aksor needs it. "
-            "On Windows run <code>winget install ffmpeg</code> or put <code>ffmpeg.exe</code> next to the app."
+            _("⚠ ffmpeg not found. Kodik episodes will be saved as <code>.ts</code>, and Aksor needs it. "
+              "On Windows run <code>winget install ffmpeg</code> or put <code>ffmpeg.exe</code> next to the app.")
         )
-        html = f"""
+        html = _("""
 <h3>Downloading an episode</h3>
 <ol>
 <li><b>Search</b> for a title (Russian or English name) and press Enter.</li>
@@ -161,7 +167,7 @@ episodes for a TV or cut a long video into 10-minute parts. Run one from <b>Scri
 or a folder, by right-clicking a finished download, or tick <i>Run automatically after each download</i>.
 The converted file replaces the original.</p>
 <p>Set up your <a href="#token">API token</a> once. It takes a minute.</p>
-"""
+""", ffmpeg_line=ffmpeg_line)
         lbl = _label(html)
         lbl.setOpenExternalLinks(False)
         lbl.linkActivated.connect(lambda _l: self.tabs.setCurrentIndex(TAB_TOKEN))
@@ -172,26 +178,26 @@ The converted file replaces the original.</p>
         return w
 
     def _token_tab(self) -> QWidget:
-        steps = _label(f"""
+        steps = _label(_("""
 <p>YummyAnime asks every app to identify itself with a free <b>application token</b>.
 Downloads work without one today, but the API docs say it's required, so it's worth setting up.</p>
 <ol>
-<li>Log in (or register) at <a href="{SITE_URL}">yummyani.me</a>.</li>
-<li>Open <a href="{APPS_URL}">yummyani.me/dev/applications</a> and create an application.
+<li>Log in (or register) at <a href="{site}">yummyani.me</a>.</li>
+<li>Open <a href="{apps}">yummyani.me/dev/applications</a> and create an application.
     Any name and description will do.</li>
 <li>Copy the application's <b>public token</b>.</li>
 <li>Paste it below and click <b>Save token</b>.</li>
 </ol>
-""")
-        open_btn = QPushButton("1. Open the applications page")
+""", site=SITE_URL, apps=APPS_URL))
+        open_btn = QPushButton(_("1. Open the applications page"))
         open_btn.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(APPS_URL)))
 
         self.token_edit = QLineEdit(self.cfg.token)
-        self.token_edit.setPlaceholderText("Paste your public token here")
+        self.token_edit.setPlaceholderText(_("Paste your public token here"))
         self.token_edit.setClearButtonEnabled(True)
-        paste_btn = QPushButton("Paste")
+        paste_btn = QPushButton(_("Paste"))
         paste_btn.clicked.connect(self._paste_token)
-        save_btn = QPushButton("Save token")
+        save_btn = QPushButton(_("Save token"))
         save_btn.setDefault(True)
         save_btn.clicked.connect(self._save_token)
         self.token_edit.returnPressed.connect(self._save_token)
@@ -206,10 +212,12 @@ Downloads work without one today, but the API docs say it's required, so it's wo
         self._refresh_token_status()
 
         note = _label(
-            f"<p style='color:gray'>The token is stored in <code>{cfgmod.config_path()}</code> and sent "
-            "as the <code>X-Application</code> header. The command-line tool uses the same setting. "
-            f"Instead of saving it here you can set the <code>{cfgmod.ENV_TOKEN}</code> "
-            "environment variable, which takes priority.</p>")
+            "<p style='color:gray'>"
+            + _("The token is stored in <code>{path}</code> and sent as the <code>X-Application</code> header. "
+                "The command-line tool uses the same setting. Instead of saving it here you can set the "
+                "<code>{env}</code> environment variable, which takes priority.",
+                path=cfgmod.config_path(), env=cfgmod.ENV_TOKEN)
+            + "</p>")
 
         w = QWidget()
         lay = QVBoxLayout(w)
@@ -227,28 +235,30 @@ Downloads work without one today, but the API docs say it's required, so it's wo
         cmd = cli_command()
         folder = cli_dir()
         if folder:
-            where = (f"<p>The command-line tool is <code>{cmd}</code>, in the same folder as this app: "
-                     f"<code>{folder}</code>. Open a terminal there and run the commands below.</p>")
+            where = _("The command-line tool is <code>{cmd}</code>, in the same folder as this app: "
+                      "<code>{folder}</code>. Open a terminal there and run the commands below.",
+                      cmd=cmd, folder=folder)
         elif getattr(sys, "frozen", False):
-            where = (f"<p>The command-line tool <code>{cmd}</code> is shipped in the release zip, "
-                     "next to <code>yummy-dl-gui.exe</code>.</p>")
+            where = _("The command-line tool <code>{cmd}</code> is shipped in the release zip, "
+                      "next to <code>yummy-dl-gui.exe</code>.", cmd=cmd)
         else:
-            where = "<p>Run these in a terminal where yummy-dl is installed (your virtualenv).</p>"
-        intro = _label(where + "<p>Double-clicking it without arguments starts a guided mode that asks "
-                       "what to download step by step.</p>")
+            where = _("Run these in a terminal where yummy-dl is installed (your virtualenv).")
+        intro = _label(f"<p>{where}</p><p>"
+                       + _("Double-clicking it without arguments starts a guided mode that asks "
+                           "what to download step by step.") + "</p>")
 
         text = QPlainTextEdit(cli_reference(cmd))
         text.setReadOnly(True)
         text.setLineWrapMode(QPlainTextEdit.NoWrap)
         text.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
 
-        copy_btn = QPushButton("Copy all")
+        copy_btn = QPushButton(_("Copy all"))
         copy_btn.clicked.connect(lambda: self._copy(text.toPlainText(), copy_btn))
         row = QHBoxLayout()
         row.addWidget(copy_btn)
         if folder and sys.platform == "win32":
-            term_btn = QPushButton("Open terminal here")
-            term_btn.setToolTip(f"Opens a Command Prompt in {folder}")
+            term_btn = QPushButton(_("Open terminal here"))
+            term_btn.setToolTip(_("Opens a Command Prompt in {folder}", folder=folder))
             term_btn.clicked.connect(lambda: self._open_terminal(folder))
             row.addWidget(term_btn)
         row.addStretch()
@@ -267,14 +277,13 @@ Downloads work without one today, but the API docs say it's required, so it's wo
         pix = QPixmap(asset("logo.png"))
         if not pix.isNull():
             logo.setPixmap(pix.scaled(96, 96, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        info = _label(f"""
-<h2>yummy-dl {__version__}</h2>
-<p>Downloader for Russian-dubbed anime from <a href="{SITE_URL}">YummyAnime</a>,
-built on the official API (<a href="{SWAGGER_URL}">docs</a>).</p>
+        info = _label(f"<h2>yummy-dl {__version__}</h2>" + _("""
+<p>Downloader for Russian-dubbed anime from <a href="{site}">YummyAnime</a>,
+built on the official API (<a href="{docs}">docs</a>).</p>
 <p>Supported players: CVH, Kodik, Aksor.</p>
 <p>The YummyAnime API is <b>for personal use only</b>. Don't redistribute downloaded content.</p>
-<p style='color:gray'>Settings file: <code>{cfgmod.config_path()}</code></p>
-""")
+<p style='color:gray'>Settings file: <code>{path}</code></p>
+""", site=SITE_URL, docs=SWAGGER_URL, path=cfgmod.config_path()))
         w = QWidget()
         lay = QHBoxLayout(w)
         lay.addWidget(logo, 0, Qt.AlignTop)
@@ -285,11 +294,12 @@ built on the official API (<a href="{SWAGGER_URL}">docs</a>).</p>
 
     def _refresh_token_status(self) -> None:
         if os.environ.get(cfgmod.ENV_TOKEN):
-            msg = f"✓ Using the token from the {cfgmod.ENV_TOKEN} environment variable (it overrides the saved one)."
+            msg = _("✓ Using the token from the {env} environment variable (it overrides the saved one).",
+                    env=cfgmod.ENV_TOKEN)
         elif self.cfg.token:
-            msg = "✓ A token is saved."
+            msg = _("✓ A token is saved.")
         else:
-            msg = "No token saved yet."
+            msg = _("No token saved yet.")
         self.token_status.setText(msg)
 
     def _paste_token(self) -> None:
@@ -299,19 +309,19 @@ built on the official API (<a href="{SWAGGER_URL}">docs</a>).</p>
     def _save_token(self) -> None:
         tok = self.token_edit.text().strip()
         if any(c.isspace() for c in tok):
-            self.token_status.setText("⚠ That doesn't look like a token (it contains spaces). Copy just the token.")
+            self.token_status.setText(_("⚠ That doesn't look like a token (it contains spaces). Copy just the token."))
             return
         self._on_token_saved(tok)
         self.token_edit.setText(tok)
         self._refresh_token_status()
         if tok:
-            self.token_status.setText(self.token_status.text() + " Saved, you're all set.")
+            self.token_status.setText(self.token_status.text() + " " + _("Saved, you're all set."))
         else:
-            self.token_status.setText("Token removed.")
+            self.token_status.setText(_("Token removed."))
 
     def _copy(self, text: str, btn: QPushButton) -> None:
         QGuiApplication.clipboard().setText(text)
-        btn.setText("Copied ✓")
+        btn.setText(_("Copied ✓"))
 
     @staticmethod
     def _open_terminal(folder: Path) -> None:

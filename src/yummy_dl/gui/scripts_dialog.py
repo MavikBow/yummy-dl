@@ -28,9 +28,11 @@ from PySide6.QtWidgets import (
 
 from .. import hls
 from .. import scripts as scriptmod
+from ..i18n import _
 from ..scripts import Script
 
-PLACEHOLDER_HELP = (
+def placeholder_help() -> str:
+    return _(
     "Write the ffmpeg arguments; <code>ffmpeg</code> itself is optional. Placeholders:<br>"
     "<code>{input}</code> the episode file &nbsp; <code>{name}</code> its name without extension &nbsp; "
     "<code>{ext}</code> its extension &nbsp; <code>{episode}</code> episode number (01) &nbsp; "
@@ -40,7 +42,7 @@ PLACEHOLDER_HELP = (
     "Keep <code>{name}</code> in output names (optionally after <code>{episode}</code>) so the app still "
     "sees the episode as downloaded.<br>"
     "<b>After a successful run the original file is deleted</b>; if ffmpeg fails it is kept."
-)
+    )
 
 
 class ScriptsDialog(QDialog):
@@ -48,7 +50,7 @@ class ScriptsDialog(QDialog):
 
     def __init__(self, parent, scripts: list[Script], on_saved) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Scripts")
+        self.setWindowTitle(_("Scripts"))
         self.resize(900, 560)
         self.scripts = [copy.copy(s) for s in scripts]
         self._on_saved = on_saved
@@ -58,20 +60,21 @@ class ScriptsDialog(QDialog):
         # left: list
         self.list = QListWidget()
         self.list.currentRowChanged.connect(self._load_current)
-        new_btn = QPushButton("New")
-        new_btn.clicked.connect(lambda: self._add(Script(name=self._unique("New script"),
+        new_btn = QPushButton(_("New"))
+        new_btn.clicked.connect(lambda: self._add(Script(name=self._unique(_("New script")),
                                                           command="-i {input} -c copy {outdir}/{name}.mkv")))
-        examples = QToolButton(text="From example ▾")
+        examples = QToolButton(text=_("From example ▾"))
         examples.setPopupMode(QToolButton.InstantPopup)
         menu = QMenu(examples)
         for ex in scriptmod.EXAMPLES:
-            act = menu.addAction(ex.name)
-            act.setToolTip(ex.comment)
-            act.triggered.connect(lambda _c=False, ex=ex: self._add(dataclasses.replace(ex, name=self._unique(ex.name))))
+            act = menu.addAction(_(ex.name))
+            act.setToolTip(_(ex.comment))
+            act.triggered.connect(lambda _c=False, ex=ex: self._add(
+                dataclasses.replace(ex, name=self._unique(_(ex.name)), comment=_(ex.comment))))
         examples.setMenu(menu)
-        self.dup_btn = QPushButton("Duplicate")
+        self.dup_btn = QPushButton(_("Duplicate"))
         self.dup_btn.clicked.connect(self._duplicate)
-        self.del_btn = QPushButton("Delete")
+        self.del_btn = QPushButton(_("Delete"))
         self.del_btn.clicked.connect(self._delete)
         lbtns = QHBoxLayout()
         for b in (new_btn, examples, self.dup_btn, self.del_btn):
@@ -84,31 +87,32 @@ class ScriptsDialog(QDialog):
 
         # right: editor
         self.name_edit = QLineEdit()
-        self.comment_edit = QLineEdit(placeholderText="Optional: what it's for")
+        self.comment_edit = QLineEdit(placeholderText=_("Optional: what it's for"))
         self.command_edit = QPlainTextEdit()
         self.command_edit.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
         self.command_edit.setPlaceholderText("-i {input} -c:v libx264 -c:a libmp3lame {outdir}/{name}.mkv")
-        self.own_folder_cb = QCheckBox("Save the results in a folder named after the video "
-                                       "(useful when cutting into parts)")
-        self.auto_cb = QCheckBox("Run automatically after each download (only one script can)")
+        self.own_folder_cb = QCheckBox(_("Save the results in a folder named after the video "
+                                         "(useful when cutting into parts)"))
+        self.auto_cb = QCheckBox(_("Run automatically after each download (only one script can)"))
         self.problems = QLabel()
         self.problems.setWordWrap(True)
         self.problems.setStyleSheet("color: #d9534f")
-        help_lbl = QLabel(PLACEHOLDER_HELP)
+        help_lbl = QLabel(placeholder_help())
         help_lbl.setWordWrap(True)
         help_lbl.setTextFormat(Qt.RichText)
         if not hls.find_ffmpeg():
-            help_lbl.setText(help_lbl.text() + "<br><b style='color:#d9534f'>ffmpeg was not found, so scripts "
-                             "can't run yet. On Windows: winget install ffmpeg.</b>")
+            help_lbl.setText(help_lbl.text() + "<br><b style='color:#d9534f'>"
+                             + _("ffmpeg was not found, so scripts can't run yet. On Windows: winget install ffmpeg.")
+                             + "</b>")
 
         form = QFormLayout()
-        form.addRow("Name:", self.name_edit)
-        form.addRow("Comment:", self.comment_edit)
+        form.addRow(_("Name:"), self.name_edit)
+        form.addRow(_("Comment:"), self.comment_edit)
         self.editor = QWidget()
         el = QVBoxLayout(self.editor)
         el.setContentsMargins(0, 0, 0, 0)
         el.addLayout(form)
-        el.addWidget(QLabel("ffmpeg command:"))
+        el.addWidget(QLabel(_("ffmpeg command:")))
         el.addWidget(self.command_edit, 1)
         el.addWidget(self.problems)
         el.addWidget(self.own_folder_cb)
@@ -166,7 +170,7 @@ class ScriptsDialog(QDialog):
         row = self.list.currentRow()
         if row < 0:
             return
-        if QMessageBox.question(self, "Scripts", f"Delete '{self.scripts[row].name}'?") != QMessageBox.Yes:
+        if QMessageBox.question(self, _("Scripts"), _("Delete '{name}'?", name=self.scripts[row].name)) != QMessageBox.Yes:
             return
         del self.scripts[row]
         self.list.takeItem(row)
@@ -207,7 +211,7 @@ class ScriptsDialog(QDialog):
             for other in self.scripts:  # only one auto script: a second would find its input deleted
                 other.auto = False
         s.auto = self.auto_cb.isChecked()
-        self.list.currentItem().setText(s.name or "(no name)")
+        self.list.currentItem().setText(s.name or _("(no name)"))
         self._dirty = True
         self._show_problems()
 
@@ -224,17 +228,17 @@ class ScriptsDialog(QDialog):
         for i, s in enumerate(self.scripts):
             problems = scriptmod.validate(s)
             if not problems and names.count(s.name.strip()) > 1:
-                problems = [f"Another script is also named '{s.name}'."]
+                problems = [_("Another script is also named '{name}'.", name=s.name)]
             if problems:
                 self.list.setCurrentRow(i)
-                QMessageBox.warning(self, "Scripts", f"'{s.name or '(no name)'}': " + " ".join(problems))
+                QMessageBox.warning(self, _("Scripts"), f"'{s.name or _('(no name)')}': " + " ".join(problems))
                 return
         for s in self.scripts:
             s.name = s.name.strip()
         try:
             scriptmod.save_scripts(self.scripts)
         except OSError as e:
-            QMessageBox.warning(self, "Scripts", f"Couldn't save: {e}")
+            QMessageBox.warning(self, _("Scripts"), _("Couldn't save: {error}", error=e))
             return
         self._dirty = False
         self._on_saved(self.scripts)
@@ -242,7 +246,7 @@ class ScriptsDialog(QDialog):
 
     def reject(self) -> None:
         if self._dirty:
-            ans = QMessageBox.question(self, "Scripts", "Discard your unsaved changes?")
+            ans = QMessageBox.question(self, _("Scripts"), _("Discard your unsaved changes?"))
             if ans != QMessageBox.Yes:
                 return
         super().reject()

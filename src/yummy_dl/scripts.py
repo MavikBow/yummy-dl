@@ -27,6 +27,7 @@ from pathlib import Path
 from . import config as cfgmod
 from . import hls
 from .core import VIDEO_EXTS
+from .i18n import N_, _
 from .naming import episode_number
 
 TMP_PREFIX = ".yummy-tmp-"
@@ -49,20 +50,20 @@ class Script:
 
 EXAMPLES: list[Script] = [
     Script(
-        name="x264/MP3 MKV 720p",
-        comment="Re-encode to H.264 + MP3 192k, scaled to 720p. Plays on simple hardware players.",
+        name=N_("x264/MP3 MKV 720p"),
+        comment=N_("Re-encode to H.264 + MP3 192k, scaled to 720p. Plays on simple hardware players."),
         command="-i {input} -c:v libx264 -c:a libmp3lame -b:a 192k -vf scale=-2:720\n{outdir}/{name}.mkv",
     ),
     Script(
-        name="x264/MP3 MKV 720p, 10-min parts",
-        comment="Same conversion, cut into 10-minute pieces inside a folder named after the video.",
+        name=N_("x264/MP3 MKV 720p, 10-min parts"),
+        comment=N_("Same conversion, cut into 10-minute pieces inside a folder named after the video."),
         command=("-i {input} -c:v libx264 -c:a libmp3lame -b:a 192k -vf scale=-2:720\n"
                  "-f segment -segment_time 600 -reset_timestamps 1\n{outdir}/{name}_%02d.mkv"),
         own_folder=True,
     ),
     Script(
-        name="Remux to MKV (no re-encode)",
-        comment="Change the container to MKV without touching video or audio. Takes seconds.",
+        name=N_("Remux to MKV (no re-encode)"),
+        comment=N_("Change the container to MKV without touching video or audio. Takes seconds."),
         command="-i {input} -map 0 -c copy {outdir}/{name}.mkv",
     ),
 ]
@@ -82,7 +83,7 @@ def load_scripts() -> list[Script]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        raise ScriptError(f"can't read {path}: {e}") from e
+        raise ScriptError(_("can't read {path}: {error}", path=path, error=e)) from e
     known = {f.name for f in fields(Script)}
     return [Script(**{k: v for k, v in item.items() if k in known}) for item in data if isinstance(item, dict)]
 
@@ -103,9 +104,10 @@ def find_script(scripts: list[Script], name: str) -> Script:
     if len(hits) == 1:
         return hits[0]
     if hits:
-        raise ScriptError(f"{name!r} matches several scripts: " + ", ".join(repr(s.name) for s in hits))
-    names = ", ".join(repr(s.name) for s in scripts) or "none saved"
-    raise ScriptError(f"no script named {name!r} (have: {names})")
+        raise ScriptError(_("'{name}' matches several scripts: {names}", name=name,
+                            names=", ".join(repr(s.name) for s in hits)))
+    names = ", ".join(repr(s.name) for s in scripts) or _("none saved")
+    raise ScriptError(_("no script named '{name}' (have: {names})", name=name, names=names))
 
 
 def auto_script(scripts: list[Script]) -> Script | None:
@@ -119,7 +121,7 @@ def split_command(command: str) -> list[str]:
     try:
         args = shlex.split(command.replace("\r", " ").replace("\n", " "), posix=True)
     except ValueError as e:  # unbalanced quotes
-        raise ScriptError(f"can't parse the command: {e}") from e
+        raise ScriptError(_("can't parse the command: {error}", error=e)) from e
     if args and Path(args[0]).stem.lower() == "ffmpeg":
         args = args[1:]
     return args
@@ -129,20 +131,20 @@ def validate(script: Script) -> list[str]:
     """Problems with a script, as human-readable messages (empty = fine)."""
     problems = []
     if not script.name.strip():
-        problems.append("Give the script a name.")
+        problems.append(_("Give the script a name."))
     try:
         args = split_command(script.command)
     except ScriptError as e:
         return [*problems, str(e)]
     joined = " ".join(args)
     if "{input}" not in joined:
-        problems.append("The command must read {input}, e.g. -i {input}.")
+        problems.append(_("The command must read {input}, e.g. -i {input}."))
     if "{outdir}" not in joined:
-        problems.append("The command must write into {outdir}, e.g. {outdir}/{name}.mkv.")
+        problems.append(_("The command must write into {outdir}, e.g. {outdir}/{name}.mkv."))
     for prev, arg in zip(args, args[1:]):
         if "{outdir}" in prev and not arg.startswith("-") and any(p in arg for p in PLACEHOLDERS):
-            problems.append(f'The output path has a space in it, so it was split in two. Wrap it in quotes: '
-                            f'"{prev} {arg}".')
+            problems.append(_('The output path has a space in it, so it was split in two. '
+                              'Wrap it in quotes: "{path}".', path=f"{prev} {arg}"))
             break
     return problems
 
@@ -218,9 +220,10 @@ def run_script(script: Script, src: Path, *, progress: hls.ProgressFn | None = N
     """
     ffmpeg = hls.find_ffmpeg()
     if not ffmpeg:
-        raise ScriptError("ffmpeg not found. Install it (Windows: winget install ffmpeg) or put ffmpeg.exe next to the app.")
+        raise ScriptError(_("ffmpeg not found. Install it (Windows: winget install ffmpeg) "
+                            "or put ffmpeg.exe next to the app."))
     if not src.is_file():
-        raise ScriptError(f"file not found: {src}")
+        raise ScriptError(_("file not found: {path}", path=src))
     problems = validate(script)
     if problems:
         raise ScriptError(" ".join(problems))
@@ -242,7 +245,7 @@ def run_script(script: Script, src: Path, *, progress: hls.ProgressFn | None = N
             try:
                 assert proc.stdout is not None
                 for raw in proc.stdout:
-                    key, _, value = raw.decode("ascii", "replace").strip().partition("=")
+                    key, _sep, value = raw.decode("ascii", "replace").strip().partition("=")
                     if key == "out_time_us" and value.isdigit() and progress:
                         progress(min(int(value) // 1000, total or 1), total or 1)
                 proc.wait()
@@ -253,13 +256,13 @@ def run_script(script: Script, src: Path, *, progress: hls.ProgressFn | None = N
             if proc.returncode:
                 err.seek(0)
                 tail = err.read().decode("utf-8", "replace").strip().splitlines()[-4:]
-                raise ScriptError(f"ffmpeg exited with code {proc.returncode}: " + " | ".join(tail))
+                raise ScriptError(_("ffmpeg exited with code {code}:", code=proc.returncode) + " " + " | ".join(tail))
 
         produced = list(work.iterdir())
         if script.own_folder and not any(outdir.iterdir()):
             produced = []
         if not produced:
-            raise ScriptError("the script finished but wrote nothing into {outdir}")
+            raise ScriptError(_("the script finished but wrote nothing into {outdir}"))
         if progress:
             progress(total or 1, total or 1)
 

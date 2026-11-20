@@ -71,6 +71,16 @@ The token is sent as the `X-Application` header.
 - a guided **API token** setup: it opens the YummyAnime applications page, then you paste the token and click Save,
 - a command-line cheat sheet, with "Copy all" and, in the Windows release, "Open terminal here".
 
+## Language
+
+The app and the CLI speak **English** and **Russian**. By default they follow the system language (Russian on a
+Russian Windows, English otherwise).
+
+- Desktop app: **Settings → Language**. It asks to restart, and then reopens in the new language.
+- CLI: `yummy-dl config set --language ru` (or `en`, or `auto` to follow the system).
+
+Both use the same setting. Anime titles and dub names come from YummyAnime as they are.
+
 ## Scripts
 
 **Scripts** (next to Settings) stores ffmpeg commands you run on downloaded episodes: converting for a TV or a
@@ -117,6 +127,7 @@ yummy-dl interactive                      # guided loop (also what double-clicki
 yummy-dl download berserk -d "MC Entertainment" -e 1-5,8 -q 720 -o D:\Anime
 yummy-dl config show                      # settings, config path, ffmpeg status
 yummy-dl config set --output-dir D:\Anime --quality 1080
+yummy-dl config set --language ru         # interface language: auto, en or ru
 yummy-dl scripts run "BBK 720p" D:\Anime\Berserk   # run a saved script on a folder
 ```
 

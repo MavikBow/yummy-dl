@@ -13,6 +13,11 @@ class Anime:
     status: str = ""
     episodes: int | None = None
     other_titles: list[str] = field(default_factory=list)
+    posters: dict[str, str] = field(default_factory=dict)  # size -> absolute URL (small/medium/big/...)
+
+    def poster(self, *sizes: str) -> str | None:
+        """First available poster URL among `sizes` (in order of preference)."""
+        return next((self.posters[s] for s in sizes if self.posters.get(s)), None)
 
     @classmethod
     def from_api(cls, d: dict) -> Anime:
@@ -26,6 +31,8 @@ class Anime:
             status=(d.get("anime_status") or {}).get("title", ""),
             episodes=episodes.get("count") if isinstance(episodes, dict) else None,
             other_titles=list(d.get("other_titles") or []),
+            posters={k: ("https:" + v if v.startswith("//") else v)
+                     for k, v in (d.get("poster") or {}).items() if isinstance(v, str) and v},
         )
 
 

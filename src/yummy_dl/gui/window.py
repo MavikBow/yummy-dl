@@ -5,9 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QUrl
-from PySide6.QtGui import QAction, QDesktopServices, QKeySequence
+from PySide6.QtGui import QAction, QDesktopServices, QIcon, QKeySequence, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QComboBox,
     QFileDialog,
     QFormLayout,
@@ -34,9 +35,11 @@ from .. import core, hls
 from ..api import YummyClient
 from ..extractors import EXTRACTORS, find_extractor
 from ..models import Anime, Video
+from . import theme
 from .workers import CANCELLED, DONE, FAILED, QUEUED, RUNNING, SKIPPED, DownloadManager, Job, run_bg
 
 QUALITIES = [1080, 720, 480, 360]
+POSTER_W, POSTER_H = 160, 224
 AUTO = "Auto"
 
 
@@ -51,6 +54,7 @@ class MainWindow(QMainWindow):
         self.dubs: list[core.DubOption] = []
         self.jobs: dict[int, Job] = {}
         self._req = 0  # guards against stale background responses
+        self._images: dict[str, bytes] = {}  # poster URL -> bytes
 
         self.manager = DownloadManager()
         self.manager.progress.connect(self._on_progress)
@@ -67,6 +71,11 @@ class MainWindow(QMainWindow):
         act = QAction("API &token…", self)
         act.triggered.connect(self._set_token)
         menu.addAction(act)
+        self.dark_act = QAction("&Dark theme", self, checkable=True)
+        self.dark_act.setChecked(theme.resolve(self.cfg.theme))
+        self.dark_act.toggled.connect(self._toggle_dark)
+        menu.addAction(self.dark_act)
+        menu.addSeparator()
         act = QAction("Open &config folder", self)
         act.triggered.connect(lambda: self._open(cfgmod.config_path().parent))
         menu.addAction(act)
@@ -83,6 +92,7 @@ class MainWindow(QMainWindow):
 
         # results
         self.results = QListWidget()
+        self.results.setIconSize(QSize(33, 47))
         self.results.currentItemChanged.connect(self._on_result_selected)
 
         # details
@@ -94,7 +104,11 @@ class MainWindow(QMainWindow):
         self.title_lbl.setFont(f)
         self.sub_lbl = QLabel("")
         self.sub_lbl.setWordWrap(True)
-        self.sub_lbl.setStyleSheet("color: gray")
+        self.sub_lbl.setForegroundRole(QPalette.PlaceholderText)
+        self.poster = QLabel()
+        self.poster.setFixedSize(POSTER_W, POSTER_H)
+        self.poster.setAlignment(Qt.AlignCenter)
+        self.poster.hide()
 
         self.dub_combo = QComboBox()
         self.dub_combo.currentIndexChanged.connect(self._on_dub_changed)
@@ -139,9 +153,15 @@ class MainWindow(QMainWindow):
 
         details = QWidget()
         dl = QVBoxLayout(details)
-        dl.addWidget(self.title_lbl)
-        dl.addWidget(self.sub_lbl)
-        dl.addLayout(form)
+        info = QVBoxLayout()
+        info.addWidget(self.title_lbl)
+        info.addWidget(self.sub_lbl)
+        info.addLayout(form)
+        info.addStretch(1)
+        header = QHBoxLayout()
+        header.addWidget(self.poster, 0, Qt.AlignTop)
+        header.addLayout(info, 1)
+        dl.addLayout(header)
         dl.addWidget(QLabel("Episodes:"))
         dl.addWidget(self.episodes, 1)
         dl.addLayout(ep_btns)
@@ -226,6 +246,49 @@ class MainWindow(QMainWindow):
         self.cfg.output_dir = str(self._out_dir())
         cfgmod.save(self.cfg)
 
+    # --- theme & images -----------------------------------------------------
+
+    def _toggle_dark(self, dark: bool) -> None:
+        theme.apply(QApplication.instance(), dark)
+        self.cfg.theme = "dark" if dark else "light"
+        cfgmod.save(self.cfg)
+
+    @staticmethod
+    def _pixmap(data: bytes) -> QPixmap:
+        pm = QPixmap()
+        pm.loadFromData(data)
+        return pm
+
+    def _load_image(self, url: str, on_loaded) -> None:
+        """Fetch an image in the background (cached); failures are silently ignored."""
+        if url in self._images:
+            on_loaded(self._images[url])
+            return
+
+        def done(data: bytes) -> None:
+            self._images[url] = data
+            on_loaded(data)
+
+        run_bg(lambda: self.api.get_image(url), done, lambda _err: None)
+
+    def _show_poster(self, anime: Anime, req: int) -> None:
+        url = anime.poster("big", "medium", "fullsize")
+        self.poster.clear()
+        self.poster.setVisible(bool(url))
+        if not url:
+            return
+
+        def show(data: bytes) -> None:
+            if req != self._req:
+                return  # user already picked another title
+            pm = self._pixmap(data)
+            if pm.isNull():
+                self.poster.hide()
+                return
+            self.poster.setPixmap(pm.scaled(POSTER_W, POSTER_H, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        self._load_image(url, show)
+
     # --- search & title -----------------------------------------------------
 
     def _search(self) -> None:
@@ -243,8 +306,10 @@ class MainWindow(QMainWindow):
             for a in results:
                 item = QListWidgetItem(f"{a.title}\n{a.year or ''} · {a.type} · {a.status}")
                 item.setData(Qt.UserRole, a)
-                item.setSizeHint(QSize(0, 44))
+                item.setSizeHint(QSize(0, 54))
                 self.results.addItem(item)
+                if url := a.poster("small", "medium"):
+                    self._load_image(url, lambda data, it=item: it.setIcon(QIcon(self._pixmap(data))))
             self._status(f"{len(results)} result(s)" if results else "Nothing found", 5000)
 
         run_bg(lambda: self.api.search(q, limit=30), done, self._error)
@@ -258,6 +323,7 @@ class MainWindow(QMainWindow):
         self.anime = None
         self.title_lbl.setText(a.title)
         self.sub_lbl.setText("Loading…")
+        self._show_poster(a, req)
         self.dub_combo.clear()
         self.episodes.clear()
         self._set_details_enabled(False)

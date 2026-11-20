@@ -22,6 +22,7 @@ class Config:
     output_dir: str = ""
     quality: int = 720
     workers: int = 8
+    theme: str = ""  # "" = follow system, "dark", "light" (GUI only)
 
     @property
     def effective_token(self) -> str | None:

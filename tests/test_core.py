@@ -281,3 +281,11 @@ def test_direct_no_range_fallback(tmp_path):
     with httpx.Client(transport=transport) as http:
         out = direct.download("https://cdn/x.mp4", tmp_path / "a.mp4", http=http)
     assert out.read_bytes() == payload
+
+
+def test_anime_posters():
+    a = Anime.from_api(json.loads((FIX / "search.json").read_text("utf-8"))["response"][0])
+    assert a.posters["big"].startswith("https://static.yani.tv/posters/big/")
+    assert a.poster("missing", "big") == a.posters["big"]
+    assert a.poster("missing") is None
+    assert Anime.from_api({"anime_id": 1, "poster": None}).poster("big") is None

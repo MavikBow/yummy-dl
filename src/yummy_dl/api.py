@@ -52,3 +52,9 @@ class YummyClient:
 
     def get_videos(self, anime_id: int) -> list[Video]:
         return [Video.from_api(v) for v in self._get(f"/anime/{anime_id}/videos")]
+
+    def get_image(self, url: str) -> bytes:
+        """Fetch a poster/image (WebP/JPEG; AVIF is avoided since not every Qt build decodes it)."""
+        resp = self._http.get(url, headers={"Accept": "image/webp,image/jpeg,image/*;q=0.8"})
+        resp.raise_for_status()
+        return resp.content

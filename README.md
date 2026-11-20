@@ -1,3 +1,5 @@
+<p align="center"><img src="src/yummy_dl/gui/assets/logo.png" width="128" alt="yummy-dl logo"></p>
+
 # yummy-dl
 
 Command-line downloader for Russian-dubbed anime from [YummyAnime](https://yummyani.me), built on the

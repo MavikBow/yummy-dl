@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
         self.poster.setToolTip("Click to view full screen")
         self.poster.clicked.connect(self._open_poster)
         self.poster.setAlignment(Qt.AlignCenter)
-        self.poster.hide()
+        self._show_logo()
 
         self.dub_combo = QComboBox()
         self.dub_combo.currentIndexChanged.connect(self._on_dub_changed)
@@ -278,20 +278,34 @@ class MainWindow(QMainWindow):
 
         run_bg(lambda: self.api.get_image(url), done, on_failed or (lambda _err: None))
 
+    def _show_logo(self) -> None:
+        """App logo in the poster slot: before a title is picked, or when a title has no poster."""
+        from . import asset
+
+        self._poster_anime = None  # not clickable
+        pm = QPixmap(asset("logo.png"))
+        self.poster.setPixmap(pm.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.poster.setCursor(Qt.ArrowCursor)
+        self.poster.setToolTip("")
+        self.poster.show()
+
     def _show_poster(self, anime: Anime, req: int) -> None:
         url = anime.poster("big", "medium", "fullsize")
+        if not url:
+            self._show_logo()
+            return
         self._poster_anime = anime
         self.poster.clear()
-        self.poster.setVisible(bool(url))
-        if not url:
-            return
+        self.poster.setCursor(Qt.PointingHandCursor)
+        self.poster.setToolTip("Click to view full screen")
+        self.poster.show()
 
         def show(data: bytes) -> None:
             if req != self._req:
                 return  # user already picked another title
             pm = self._pixmap(data)
             if pm.isNull():
-                self.poster.hide()
+                self._show_logo()
                 return
             self.poster.setPixmap(pm.scaled(POSTER_W, POSTER_H, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 

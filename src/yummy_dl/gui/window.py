@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QProcess, QSize, Qt, QTimer, QUrl
-from PySide6.QtGui import QAction, QActionGroup, QDesktopServices, QIcon, QKeySequence, QPalette, QPixmap
+from PySide6.QtGui import QAction, QActionGroup, QCursor, QGuiApplication, QDesktopServices, QIcon, QKeySequence, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -94,6 +94,17 @@ class MainWindow(QMainWindow):
         self._refresh_ffmpeg_status()
         # Warm up TLS/HTTP after the first paint so the first search is quick.
         QTimer.singleShot(200, lambda: run_bg(self.api.warm, lambda _r: None, lambda _e: None))
+
+    def center_on_screen(self) -> None:
+        """Place the window in the middle of the screen the mouse is on, shrunk if the screen is small."""
+        screen = QGuiApplication.screenAt(QCursor.pos()) or QGuiApplication.primaryScreen()
+        if screen is None:
+            return
+        area = screen.availableGeometry()
+        self.resize(min(self.width(), area.width() - 40), min(self.height(), area.height() - 60))
+        frame = self.frameGeometry()
+        frame.moveCenter(area.center())
+        self.move(max(frame.left(), area.left()), max(frame.top(), area.top()))
 
     # --- layout -------------------------------------------------------------
 

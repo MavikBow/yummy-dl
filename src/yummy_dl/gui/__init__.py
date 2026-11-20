@@ -77,6 +77,7 @@ def main() -> int:
     theme.apply(app, theme.resolve(cfg.theme))
     win = MainWindow()
     win.show()
+    win.center_on_screen()  # after show(), so the title bar counts
     if os.environ.get("YUMMY_EXIT_AFTER_SHOW"):  # startup-time measurement: quit once the window is up
         from PySide6.QtCore import QTimer
 

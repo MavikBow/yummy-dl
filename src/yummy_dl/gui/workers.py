@@ -30,11 +30,14 @@ class _Call(QRunnable):
 
     def run(self) -> None:
         try:
-            result = self.fn()
-        except Exception as e:  # surfaced in the UI, never crash the worker pool
-            self.signals.failed.emit(str(e) or type(e).__name__)
-        else:
-            self.signals.done.emit(result)
+            try:
+                result = self.fn()
+            except Exception as e:  # surfaced in the UI, never crash the worker pool
+                self.signals.failed.emit(str(e) or type(e).__name__)
+            else:
+                self.signals.done.emit(result)
+        except RuntimeError:
+            pass  # the app/window closed while this was running; nobody is listening anymore
 
 
 _alive: set[_Call] = set()

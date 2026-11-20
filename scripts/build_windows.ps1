@@ -37,6 +37,7 @@ if ($LASTEXITCODE) { throw "PyInstaller (GUI) failed" }
 # CLI: single file, no Qt
 & $py -m PyInstaller --noconfirm --onefile --console `
     --name yummy-dl `
+    --icon src\yummy_dl\gui\assets\logo.ico `
     --collect-submodules yummy_dl `
     --collect-submodules rich._unicode_data `
     --exclude-module PySide6 `

@@ -16,9 +16,12 @@ EXCLUDES = [
     "PySide6.QtNetwork", "PySide6.QtQml", "PySide6.QtQuick", "tkinter",
 ]
 
+assets = root / "src" / "yummy_dl" / "gui" / "assets"
+
 a = Analysis(
     [str(root / "src" / "yummy_dl" / "gui" / "__main__.py")],
     pathex=[str(root / "src")],
+    datas=[(str(assets / "logo.png"), "yummy_dl/gui/assets")],
     excludes=EXCLUDES,
     noarchive=False,
 )
@@ -33,5 +36,6 @@ exe = EXE(
     name="yummy-dl-gui",
     console=False,
     upx=False,
+    icon=str(assets / "logo.ico"),
 )
 coll = COLLECT(exe, a.binaries, a.datas, name="yummy-dl", upx=False)

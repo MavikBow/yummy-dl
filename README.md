@@ -13,8 +13,8 @@ Requires Python 3.11+.
 pip install -e .          # or: uv pip install -e .
 ```
 
-**ffmpeg** (recommended) turns downloads into `.mp4`. Without it, files are saved as `.ts`, which most
-players handle fine.
+**ffmpeg** (recommended) turns Kodik downloads into `.mp4`. Without it, those are saved as `.ts`, which most
+players handle fine. CVH downloads are already MP4.
 
 - Windows: `winget install ffmpeg` (or put `ffmpeg.exe` next to `yummy-dl.exe`)
 - Linux: `sudo apt install ffmpeg` / `sudo pacman -S ffmpeg`
@@ -49,11 +49,13 @@ yummy-dl config set --output-dir D:\Anime --quality 1080
 
 Each video on YummyAnime is an embedded third-party player, and each one needs its own extractor.
 
-| Player | Status |
-|---|---|
-| Kodik | ✅ |
-| CVH (cdnvideohub) | planned |
-| Aksor, Alloha | maybe later |
+| Player | Status | Notes |
+|---|---|---|
+| CVH (cdnvideohub) | ✅ | Direct MP4 up to 1080p, parallel chunked download; no ffmpeg needed |
+| Kodik | ✅ | HLS up to 720p; ffmpeg needed for .mp4 |
+| Aksor, Alloha | maybe later | |
+
+When a dub is on several players, CVH is used by default. Use `--player kodik` to override.
 
 `info` greys out dubs and players that aren't supported yet.
 

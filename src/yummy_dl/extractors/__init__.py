@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from ..models import Video
 from .base import ExtractError, Extractor
+from .cvh import CvhExtractor
 from .kodik import KodikExtractor
 
-EXTRACTORS: list[Extractor] = [KodikExtractor()]
+# Order = default preference when a dub is on several players.
+# CVH first: plain MP4 up to 1080p, no ffmpeg needed.
+EXTRACTORS: list[Extractor] = [CvhExtractor(), KodikExtractor()]
 
 
 def find_extractor(video: Video) -> Extractor | None:

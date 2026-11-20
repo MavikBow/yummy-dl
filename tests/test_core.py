@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from yummy_dl import core, hls
-from yummy_dl.extractors import kodik
+from yummy_dl import core, direct, hls
+from yummy_dl.extractors import cvh, kodik
 from yummy_dl.extractors.base import ExtractError
 from yummy_dl.models import Anime, Stream, Video
 from yummy_dl.naming import episode_filename, episode_label, sanitize
@@ -65,6 +65,8 @@ def test_group_and_pick():
     assert mc is not None and mc.dub_name == "MC Entertainment"
     picks = core.pick_videos(mc, ["1", "2"])
     assert set(picks) <= {"1", "2"}
+    assert all(v.player_name == "CVH" for v in picks.values())  # CVH preferred by default
+    picks = core.pick_videos(mc, ["1", "2"], player="kodik")
     assert all(v.player_name == "Kodik" for v in picks.values())
 
 
@@ -177,3 +179,105 @@ def test_download_resume(tmp_path, monkeypatch):
     assert "/p/seg0.ts" not in calls
     assert not parts.exists()
     assert seen[0] == (1, 3) and seen[-1] == (3, 3)
+
+
+# --- CVH -------------------------------------------------------------------
+
+CVH_URL = ("https://ru.yummyani.me/iframeCVH.html?dubbing_code=%D0%AE%D1%80%D0%B8%D0%B9+%D0%A1%D0%B5%D1%80%D0%B1%D0%B8%D0%BD"
+           "&anime_id=33&episode=2&dubbing=x")
+
+
+def test_cvh_parse_iframe():
+    assert cvh.parse_iframe(CVH_URL) == ("33", "Юрий Сербин", 2)
+    with pytest.raises(ExtractError):
+        cvh.parse_iframe("https://ru.yummyani.me/iframeCVH.html?episode=1")
+
+
+def test_cvh_find_item():
+    pl = json.loads((FIX / "cvh_playlist.json").read_text("utf-8"))
+    assert cvh.find_item(pl, "юрий сербин", 2)["vkId"] == "15533452778160"
+    assert cvh.find_item(pl, "Субтитры", 1)["vkId"] == "9513649855035"
+    with pytest.raises(ExtractError):
+        cvh.find_item(pl, "Amber", 7)
+    movie = {"isSerial": False, "items": [{"vkId": "1", "voiceStudio": "FumoDub"}]}
+    assert cvh.find_item(movie, "FumoDub", 1)["vkId"] == "1"
+
+
+def test_cvh_sources():
+    q = cvh.parse_sources(json.loads((FIX / "cvh_video.json").read_text("utf-8")))
+    assert set(q) == {1080, 720, 480, 360, 240, 144}
+    assert all(u.startswith("https://") for u in q.values())
+    with pytest.raises(ExtractError):
+        cvh.parse_sources({"status": "STATUS_ERROR", "sources": {"mpegHighUrl": ""}})
+
+
+def test_cvh_matches_fixture_videos():
+    ext = cvh.CvhExtractor()
+    names = {v.player_name for v in load_videos() if ext.matches(v)}
+    assert names == {"CVH"}
+
+
+def test_cvh_extract_mocked():
+    import httpx
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        if req.url.path.endswith("/player/sv/playlist"):
+            assert req.url.params["id"] == "33" and req.url.params["pub"] == "745"
+            return httpx.Response(200, content=(FIX / "cvh_playlist.json").read_bytes())
+        assert req.url.path.endswith("/player/sv/video/15533452778160")
+        return httpx.Response(200, content=(FIX / "cvh_video.json").read_bytes())
+
+    v = Video(1, "2", 2, "Озвучка Юрий Сербин", "Плеер CVH", 3, CVH_URL)
+    with httpx.Client(transport=httpx.MockTransport(handler)) as http:
+        stream = cvh.CvhExtractor().extract(v, http)
+    assert stream.kind == "file" and stream.pick(720)[0] == 720
+
+
+# --- direct ----------------------------------------------------------------
+
+def _range_server(payload: bytes, log: list):
+    import httpx
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        rng = req.headers.get("Range")
+        log.append(rng)
+        if not rng:
+            return httpx.Response(200, content=payload)
+        a, b = rng.split("=")[1].split("-")
+        a, b = int(a), (int(b) if b else len(payload) - 1)
+        return httpx.Response(206, content=payload[a:b + 1],
+                              headers={"Content-Range": f"bytes {a}-{b}/{len(payload)}"})
+
+    return httpx.MockTransport(handler)
+
+
+def test_direct_chunked_resume(tmp_path, monkeypatch):
+    import httpx
+
+    monkeypatch.setattr(direct, "CHUNK", 1000)
+    payload = bytes(range(256)) * 15  # 3840 bytes -> 4 chunks
+    dest = tmp_path / "ep.mp4"
+    part, state = dest.with_name("ep.mp4.part"), dest.with_name("ep.mp4.part.done")
+    # Simulate an earlier run that finished chunk 1 only.
+    part.write_bytes(b"\0" * 1000 + payload[1000:2000] + b"\0" * 1840)
+    state.write_text("1\n")
+
+    log, seen = [], []
+    with httpx.Client(transport=_range_server(payload, log)) as http:
+        out = direct.download("https://cdn/x.mp4", dest, http=http, workers=3,
+                              progress=lambda d, t: seen.append((d, t)))
+    assert out == dest and dest.read_bytes() == payload
+    assert "bytes=1000-1999" not in log
+    assert sorted(r for r in log if r != "bytes=0-0") == ["bytes=0-999", "bytes=2000-2999", "bytes=3000-3839"]
+    assert seen[0] == (1000, 3840) and seen[-1] == (3840, 3840)
+    assert not part.exists() and not state.exists()
+
+
+def test_direct_no_range_fallback(tmp_path):
+    import httpx
+
+    payload = b"x" * 5000
+    transport = httpx.MockTransport(lambda req: httpx.Response(200, content=payload))
+    with httpx.Client(transport=transport) as http:
+        out = direct.download("https://cdn/x.mp4", tmp_path / "a.mp4", http=http)
+    assert out.read_bytes() == payload

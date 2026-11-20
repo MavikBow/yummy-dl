@@ -8,12 +8,12 @@ from typing import Annotated, Optional
 import httpx
 import typer
 from rich.console import Console
-from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, TimeRemainingColumn
+from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn, TimeRemainingColumn
 from rich.prompt import IntPrompt, Prompt
 from rich.table import Table
 
 from . import config as cfgmod
-from . import core, hls
+from . import core, direct, hls
 from .api import ApiError, YummyClient
 from .extractors import ExtractError, is_supported
 from .models import Anime
@@ -163,11 +163,11 @@ def download(
 
     console.print(f"Dub [cyan]{chosen.dub_name}[/cyan], {len(picks)} episode(s), up to {quality}p → {out_dir}")
     if not hls.find_ffmpeg():
-        console.print("[yellow]ffmpeg not found: files will be saved as .ts instead of .mp4.[/yellow]")
+        console.print("[yellow]ffmpeg not found: Kodik episodes will be saved as .ts instead of .mp4.[/yellow]")
 
     failed: list[str] = []
     with httpx.Client(timeout=60, follow_redirects=True) as http, Progress(
-        TextColumn("[bold]{task.description}"), BarColumn(), MofNCompleteColumn(),
+        TextColumn("[bold]{task.description}"), BarColumn(), TaskProgressColumn(),
         TimeRemainingColumn(), console=console,
     ) as progress:
         for ep, video in picks.items():
@@ -185,7 +185,7 @@ def download(
                                                 progress=update, http=http)
                 progress.update(task, description=f"Ep {ep} ✓ {q}p")
                 progress.console.print(f"[green]saved[/green] {path}")
-            except (ExtractError, hls.HlsError, httpx.HTTPError, OSError) as e:
+            except (ExtractError, hls.HlsError, direct.DirectError, httpx.HTTPError, OSError) as e:
                 failed.append(ep)
                 progress.update(task, description=f"Ep {ep} ✗")
                 progress.console.print(f"[red]episode {ep} failed:[/red] {e}")

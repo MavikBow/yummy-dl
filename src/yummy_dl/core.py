@@ -8,7 +8,7 @@ from pathlib import Path
 
 import httpx
 
-from . import hls
+from . import direct, hls
 from .extractors import EXTRACTORS, ExtractError, find_extractor
 from .models import Anime, Video
 from .naming import episode_filename, sanitize
@@ -132,8 +132,13 @@ def download_episode(
     try:
         stream = extractor.extract(video, http)
         q, url = stream.pick(quality)
-        path = hls.download(url, episode_path(anime, video, out_dir), headers=stream.headers,
-                            workers=workers, progress=progress, http=http)
+        target = episode_path(anime, video, out_dir)
+        if stream.kind == "file":
+            path = direct.download(url, target, headers=stream.headers, workers=workers,
+                                   progress=progress, http=http)
+        else:
+            path = hls.download(url, target, headers=stream.headers,
+                                workers=workers, progress=progress, http=http)
         return path, q
     finally:
         if own:

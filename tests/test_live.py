@@ -21,3 +21,16 @@ def test_search_and_kodik_extract():
     with httpx.Client(timeout=30, follow_redirects=True) as http:
         stream = find_extractor(video).extract(video, http)
     assert stream.qualities and all(u.startswith("https://") for u in stream.qualities.values())
+
+
+def test_cvh_extract():
+    import httpx
+
+    with YummyClient() as api:
+        videos = api.get_videos(api.get_anime("berserk").anime_id)
+    dub = core.find_dub(core.group_by_dub(videos), "Юрий Сербин")
+    video = core.pick_videos(dub, ["1"], player="cvh")["1"]
+    assert video.player_name == "CVH"
+    with httpx.Client(timeout=30, follow_redirects=True) as http:
+        stream = find_extractor(video).extract(video, http)
+    assert stream.kind == "file" and 720 in stream.qualities

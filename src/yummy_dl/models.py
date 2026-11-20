@@ -71,10 +71,14 @@ class Video:
 
 @dataclass
 class Stream:
-    """Resolved playable stream: quality (height) -> HLS playlist URL."""
+    """Resolved playable stream: quality (height) -> URL.
+
+    kind "hls": URLs are m3u8 playlists; kind "file": URLs are plain media files (e.g. MP4).
+    """
 
     qualities: dict[int, str]
     headers: dict[str, str] = field(default_factory=dict)
+    kind: str = "hls"
 
     def pick(self, quality: int) -> tuple[int, str]:
         """Return the best quality <= requested, else the lowest available."""

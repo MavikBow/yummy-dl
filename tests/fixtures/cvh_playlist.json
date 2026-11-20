@@ -1,0 +1,68 @@
+{
+ "titleName": "Берсерк",
+ "isSerial": true,
+ "items": [
+  {
+   "cvhId": "019fc4e8-9b61-7a56-b71b-796471eb46f0",
+   "vkId": "15533181852336",
+   "voiceStudio": "Amber",
+   "voiceType": "Дубляж",
+   "season": 1,
+   "episode": 1
+  },
+  {
+   "cvhId": "019504c2-792e-7f3c-965b-77e9acca38d8",
+   "vkId": "9256657771114",
+   "voiceStudio": "MC Entertainment",
+   "voiceType": "Многоголосый",
+   "season": 1,
+   "episode": 1
+  },
+  {
+   "cvhId": "019fc559-5b33-7a56-a145-04b6db8aeb26",
+   "vkId": "15533450418864",
+   "voiceStudio": "Юрий Сербин",
+   "voiceType": "Авторская",
+   "season": 1,
+   "episode": 1
+  },
+  {
+   "cvhId": "01989376-2e8a-77e8-88f7-3f93b7a8ae27",
+   "vkId": "9513649855035",
+   "voiceType": "Субтитры",
+   "season": 1,
+   "episode": 1
+  },
+  {
+   "cvhId": "019fc4f4-7d29-7a56-ba5d-05ddf68b94d0",
+   "vkId": "15533196466864",
+   "voiceStudio": "Amber",
+   "voiceType": "Дубляж",
+   "season": 1,
+   "episode": 2
+  },
+  {
+   "cvhId": "019504c2-795b-73f0-b26b-f0ea9d4fed42",
+   "vkId": "9256657836650",
+   "voiceStudio": "MC Entertainment",
+   "voiceType": "Многоголосый",
+   "season": 1,
+   "episode": 2
+  },
+  {
+   "cvhId": "019fc55b-88aa-7a56-9194-70620647d844",
+   "vkId": "15533452778160",
+   "voiceStudio": "Юрий Сербин",
+   "voiceType": "Авторская",
+   "season": 1,
+   "episode": 2
+  },
+  {
+   "cvhId": "01989376-2eb6-7c88-b48e-bdba699c78f7",
+   "vkId": "9513649920571",
+   "voiceType": "Субтитры",
+   "season": 1,
+   "episode": 2
+  }
+ ]
+}

@@ -9,8 +9,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - run: pip install -e '.[dev]' && pytest
 
@@ -18,8 +18,8 @@ jobs:
     needs: test
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - name: Fetch ffmpeg
         shell: pwsh
@@ -30,7 +30,7 @@ jobs:
       - name: Build
         shell: pwsh
         run: ./scripts/build_windows.ps1 -BundleFfmpeg -FfmpegPath $env:FFMPEG
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: yummy-dl-windows
           path: dist/yummy-dl-windows.zip

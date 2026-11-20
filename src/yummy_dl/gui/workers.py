@@ -93,12 +93,12 @@ class DownloadManager(QObject):
         self.status.emit(job.id, QUEUED, "")
 
     def _loop(self) -> None:
+        job = self._queue.get()  # build the HTTP client only once there is work (keeps startup fast)
         with httpx.Client(timeout=60, follow_redirects=True) as http:
             while True:
+                if not job.cancel.is_set():
+                    self._run(job, http)
                 job = self._queue.get()
-                if job.cancel.is_set():
-                    continue
-                self._run(job, http)
 
     def _run(self, job: Job, http: httpx.Client) -> None:
         target = core.episode_path(job.anime, job.video, job.out_dir)

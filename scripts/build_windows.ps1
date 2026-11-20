@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-  Build dist\yummy-dl.exe (console CLI) and dist\yummy-dl-gui.exe (window, PySide6) with PyInstaller.
+  Build the Windows release folder dist\yummy-dl\ and dist\yummy-dl-windows.zip:
+    yummy-dl-gui.exe + _internal\   desktop app (one-folder build, starts fast)
+    yummy-dl.exe                    command-line tool (single file)
+    ffmpeg.exe                      with -BundleFfmpeg
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
-  powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1 -BundleFfmpeg
-    Also copies ffmpeg.exe (from PATH or -FfmpegPath) next to the exe and zips both into
-    dist\yummy-dl-windows.zip.
+  powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1 -BundleFfmpeg [-FfmpegPath C:\...\ffmpeg.exe]
 #>
 param(
     [switch]$BundleFfmpeg,
@@ -27,7 +28,14 @@ $py = "$venv\Scripts\python.exe"
 & $py -m pip install --quiet ".[gui]" "pyinstaller>=6.10"
 if ($LASTEXITCODE) { throw "pip install failed" }
 
-& $py -m PyInstaller --noconfirm --clean --onefile --console `
+if (Test-Path dist\yummy-dl) { Remove-Item -Recurse -Force dist\yummy-dl }
+
+# GUI: one-folder build -> dist\yummy-dl\
+& $py -m PyInstaller --noconfirm --clean --distpath dist --workpath build packaging\yummy-dl-gui.spec
+if ($LASTEXITCODE) { throw "PyInstaller (GUI) failed" }
+
+# CLI: single file, no Qt
+& $py -m PyInstaller --noconfirm --onefile --console `
     --name yummy-dl `
     --collect-submodules yummy_dl `
     --collect-submodules rich._unicode_data `
@@ -36,16 +44,11 @@ if ($LASTEXITCODE) { throw "pip install failed" }
     src\yummy_dl\__main__.py
 if ($LASTEXITCODE) { throw "PyInstaller (CLI) failed" }
 
-& $py -m PyInstaller --noconfirm --onefile --windowed `
-    --name yummy-dl-gui `
-    --collect-submodules yummy_dl `
-    --distpath dist --workpath build `
-    src\yummy_dl\gui\__main__.py
-if ($LASTEXITCODE) { throw "PyInstaller (GUI) failed" }
-
 & dist\yummy-dl.exe --help | Out-Null
-if ($LASTEXITCODE) { throw "built exe failed to run" }
-Write-Host "Built dist\yummy-dl.exe and dist\yummy-dl-gui.exe"
+if ($LASTEXITCODE) { throw "built CLI exe failed to run" }
+
+$stage = Join-Path $root "dist\yummy-dl"
+Copy-Item dist\yummy-dl.exe, README.md $stage -Force
 
 if ($BundleFfmpeg) {
     if (-not $FfmpegPath) {
@@ -53,11 +56,10 @@ if ($BundleFfmpeg) {
         if (-not $cmd) { throw "ffmpeg.exe not on PATH; pass -FfmpegPath" }
         $FfmpegPath = $cmd.Source
     }
-    $stage = Join-Path $root "dist\yummy-dl"
-    New-Item -ItemType Directory -Force $stage | Out-Null
-    Copy-Item dist\yummy-dl.exe, dist\yummy-dl-gui.exe, $FfmpegPath, README.md $stage -Force
-    $zip = "dist\yummy-dl-windows.zip"
-    if (Test-Path $zip) { Remove-Item $zip }
-    Compress-Archive -Path "$stage\*" -DestinationPath $zip
-    Write-Host "Built $zip (exes + ffmpeg)"
+    Copy-Item $FfmpegPath $stage -Force
 }
+
+$zip = "dist\yummy-dl-windows.zip"
+if (Test-Path $zip) { Remove-Item $zip }
+Compress-Archive -Path $stage -DestinationPath $zip
+Write-Host "Built $stage and $zip"

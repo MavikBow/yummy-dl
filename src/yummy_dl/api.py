@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+
 import httpx
 
 from . import USER_AGENT
@@ -16,14 +18,31 @@ class ApiError(Exception):
 
 class YummyClient:
     def __init__(self, token: str | None = None, lang: str = "ru", client: httpx.Client | None = None):
-        headers = {"Accept": "application/json", "Lang": lang, "User-Agent": USER_AGENT}
+        self._headers = {"Accept": "application/json", "Lang": lang, "User-Agent": USER_AGENT}
         if token:
-            headers["X-Application"] = token
-        self._http = client or httpx.Client(base_url=BASE_URL, timeout=30, follow_redirects=True)
-        self._http.headers.update(headers)
+            self._headers["X-Application"] = token
+        self._client = client
+        if client is not None:
+            client.headers.update(self._headers)
+        self._lock = threading.Lock()
+
+    @property
+    def _http(self) -> httpx.Client:
+        # Created lazily: building the TLS context costs ~0.7 s, which shouldn't delay GUI startup.
+        if self._client is None:
+            with self._lock:
+                if self._client is None:
+                    self._client = httpx.Client(base_url=BASE_URL, timeout=30, follow_redirects=True,
+                                                headers=self._headers)
+        return self._client
+
+    def warm(self) -> None:
+        """Create the HTTP client now (call from a background thread)."""
+        self._http  # noqa: B018
 
     def close(self) -> None:
-        self._http.close()
+        if self._client is not None:
+            self._client.close()
 
     def __enter__(self) -> YummyClient:
         return self

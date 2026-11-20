@@ -7,12 +7,13 @@ official API ([swagger](https://api.yani.tv/swagger)). Runs on Windows and Linux
 
 ## Install
 
-**Windows:** download `yummy-dl-windows.zip` and unzip it anywhere. Then:
+**Windows:** download `yummy-dl-windows.zip` and unzip it anywhere. It contains a `yummy-dl` folder:
 
 - double-click **`yummy-dl-gui.exe`** for the desktop app, or
 - double-click `yummy-dl.exe` for guided terminal mode, or run it from a terminal with the commands below.
 
-ffmpeg is included in the zip.
+Keep the `_internal` folder next to `yummy-dl-gui.exe`, since the app loads its libraries from there. ffmpeg is
+included.
 
 **From source** (Windows/Linux, Python 3.11+):
 
@@ -92,9 +93,13 @@ pytest -m live      # hits the real API/players
 On Windows (Python 3.11+ on PATH):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1                # dist\yummy-dl.exe
-powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1 -BundleFfmpeg  # + dist\yummy-dl-windows.zip
+powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1                # dist\yummy-dl\ + zip
+powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1 -BundleFfmpeg  # same, with ffmpeg.exe
 ```
+
+The GUI is a one-folder build (`packaging/yummy-dl-gui.spec`) rather than a single exe. A single-file Qt exe
+unpacks about 100 MB to `%TEMP%` on every launch and gets rescanned by antivirus each time, which made startup
+take 10+ seconds. The CLI stays a single file.
 
 CI (`.github/workflows/build.yml`) builds the zip for `v*` tags or a manual run, once the repo is on GitHub.
 Linux users can just `pip install .`. A PyInstaller binary can be built the same way with `pyinstaller --onefile`.

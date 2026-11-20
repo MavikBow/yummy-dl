@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 
 
@@ -21,4 +22,8 @@ def main() -> int:
     theme.apply(app, theme.resolve(cfgmod.load().theme))
     win = MainWindow()
     win.show()
+    if os.environ.get("YUMMY_EXIT_AFTER_SHOW"):  # startup-time measurement: quit once the window is up
+        from PySide6.QtCore import QTimer
+
+        QTimer.singleShot(0, app.quit)
     return app.exec()

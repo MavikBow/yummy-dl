@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt, QUrl
+from PySide6.QtCore import QSize, Qt, QTimer, QUrl
 from PySide6.QtGui import QAction, QDesktopServices, QIcon, QKeySequence, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -65,6 +65,8 @@ class MainWindow(QMainWindow):
         self._build_menu()
         self._build_ui()
         self._refresh_ffmpeg_status()
+        # Warm up TLS/HTTP after the first paint so the first search is quick.
+        QTimer.singleShot(200, lambda: run_bg(self.api.warm, lambda _r: None, lambda _e: None))
 
     # --- layout -------------------------------------------------------------
 

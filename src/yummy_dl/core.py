@@ -8,8 +8,8 @@ from pathlib import Path
 
 import httpx
 
-from . import direct, hls
-from .extractors import EXTRACTORS, ExtractError, find_extractor
+from . import dash, direct, hls
+from .extractors import EXTRACTORS, UNSUPPORTED_REASONS, ExtractError, find_extractor
 from .models import Anime, Video
 from .naming import episode_filename, sanitize
 
@@ -52,6 +52,16 @@ def group_by_dub(videos: list[Video]) -> list[DubOption]:
         opt = groups.setdefault(v.dubbing, DubOption(v.dubbing, v.dub_name))
         opt.by_player.setdefault(v.player_name, []).append(v)
     return sorted(groups.values(), key=lambda o: (not o.supported, -len(o.supported_episodes), o.dub_name))
+
+
+def unsupported_note(options: list[DubOption]) -> str | None:
+    """e.g. '2 dub(s) only on unsupported players: Alloha (protected by an anti-bot challenge)'."""
+    missing = [o for o in options if not o.supported]
+    if not missing:
+        return None
+    players = sorted({p for o in missing for p in o.by_player})
+    named = ", ".join(f"{p} ({UNSUPPORTED_REASONS[p]})" if p in UNSUPPORTED_REASONS else p for p in players)
+    return f"{len(missing)} dub(s) only on unsupported players: {named}"
 
 
 def find_dub(options: list[DubOption], query: str) -> DubOption | None:
@@ -137,7 +147,10 @@ def download_episode(
         stream = extractor.extract(video, http)
         q, url = stream.pick(quality)
         target = episode_path(anime, video, out_dir)
-        if stream.kind == "file":
+        if stream.kind == "dash":
+            path = dash.download(url, target, quality=quality, headers=stream.headers, workers=workers,
+                                 progress=progress, http=http)
+        elif stream.kind == "file":
             path = direct.download(url, target, headers=stream.headers, workers=workers,
                                    progress=progress, http=http)
         else:

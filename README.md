@@ -22,7 +22,7 @@ pip install -e .          # or: uv pip install -e .
 ```
 
 **ffmpeg** (recommended) turns Kodik downloads into `.mp4`. Without it, those are saved as `.ts`, which most
-players handle fine. CVH downloads are already MP4.
+players handle fine. Aksor downloads need it to merge video and audio. CVH downloads are already MP4.
 
 - Windows: `winget install ffmpeg` (or put `ffmpeg.exe` next to `yummy-dl.exe`)
 - Linux: `sudo apt install ffmpeg` / `sudo pacman -S ffmpeg`
@@ -74,9 +74,13 @@ Each video on YummyAnime is an embedded third-party player, and each one needs i
 |---|---|---|
 | CVH (cdnvideohub) | ✅ | Direct MP4 up to 1080p, parallel chunked download; no ffmpeg needed |
 | Kodik | ✅ | HLS up to 720p; ffmpeg needed for .mp4 |
-| Aksor, Alloha | maybe later | |
+| Aksor | ✅ | DASH (separate video/audio tracks), up to 1080p+; **ffmpeg required** to merge them |
+| Alloha | ❌ | Not supported: its player is protected by an anti-bot challenge (obfuscated proof-of-work + captcha) |
 
-When a dub is on several players, CVH is used by default. Use `--player kodik` to override.
+In a sample of the 30 most popular titles, CVH/Kodik/Aksor cover about 94% of dubs. About 5% are only on Alloha.
+
+When a dub is on several players, the order of preference is CVH, then Kodik, then Aksor. Use `--player kodik` or
+`--player aksor` to override.
 
 `info` greys out dubs and players that aren't supported yet.
 

@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='utf-8'?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" mediaPresentationDuration="PT23M36.4S" maxSegmentDuration="PT30.0S" minBufferTime="PT1M0.0S">
+	<ProgramInformation>
+		<Title>Berserk: Episode 01 (The Black Swordsman)</Title>
+	</ProgramInformation>
+	<ServiceDescription id="0">
+	</ServiceDescription>
+	<Period id="0" start="PT0.0S">
+		<AdaptationSet id="0" contentType="video" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true" frameRate="42452500/1770623" maxWidth="1440" maxHeight="1080" par="4:3" lang="und">
+			<Representation id="0" mimeType="video/mp4" codecs="avc1.4d4028" bandwidth="1069318" width="1440" height="1080" sar="1:1">
+				<SegmentTemplate timescale="90000" initialization="init-stream$RepresentationID$.m4s" media="chunk-stream$RepresentationID$-$Number%05d$.m4s" startNumber="1">
+					<SegmentTimeline>
+						<S t="0" d="2702700" />
+						<S d="2965462" />
+						<S d="3018015" />
+						<S d="2789037" />
+						<S d="2725222" />
+						<S d="2841589" />
+						<S d="3490987" />
+						<S d="2811559" />
+						<S d="2819066" />
+						<S d="2785283" />
+						<S d="2927925" />
+						<S d="3145642" />
+						<S d="2890388" />
+						<S d="2751499" />
+						<S d="2879126" />
+						<S d="2702700" />
+						<S d="3003000" />
+						<S d="3134381" />
+						<S d="2834081" />
+						<S d="2796544" />
+						<S d="3003000" />
+						<S d="2796544" />
+						<S d="2770267" />
+						<S d="3096844" />
+						<S d="2717715" />
+						<S d="3201949" />
+						<S d="2759006" />
+						<S d="2912910" />
+						<S d="3096844" />
+						<S d="2743991" />
+						<S d="2875373" />
+						<S d="3006753" />
+						<S d="2976724" />
+						<S d="2732730" />
+						<S d="2837835" />
+						<S d="3003000" />
+						<S d="3160658" />
+						<S d="2706453" />
+						<S d="2901649" />
+						<S d="2954201" />
+						<S d="2965463" />
+						<S d="2702700" r="1" />
+						<S d="2845342" />
+					</SegmentTimeline>
+				</SegmentTemplate>
+			</Representation>
+		</AdaptationSet>
+		<AdaptationSet id="1" contentType="audio" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true" lang="rus">
+			<Role schemeIdUri="urn:mpeg:dash:role:2011" value="MC Entertainment" /><Representation id="1" mimeType="audio/mp4" codecs="mp4a.40.2" bandwidth="161505" audioSamplingRate="48000">
+				<AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+				<SegmentTemplate timescale="48000" initialization="init-stream$RepresentationID$.m4s" media="chunk-stream$RepresentationID$-$Number%05d$.m4s" startNumber="1">
+					<SegmentTimeline>
+						<S t="0" d="1437696" />
+						<S d="1440768" r="45" />
+						<S d="293856" />
+					</SegmentTimeline>
+				</SegmentTemplate>
+			</Representation>
+		</AdaptationSet>
+	</Period>
+</MPD>

@@ -289,3 +289,111 @@ def test_anime_posters():
     assert a.poster("missing", "big") == a.posters["big"]
     assert a.poster("missing") is None
     assert Anime.from_api({"anime_id": 1, "poster": None}).poster("big") is None
+
+
+# --- DASH / Aksor ------------------------------------------------------------
+
+from yummy_dl import dash  # noqa: E402
+from yummy_dl.extractors import aksor  # noqa: E402
+
+MPD_URL = "https://cdn.example/video/a70/MC%20Entertainment/01/1080.mpd"
+
+
+def test_dash_parse_real_mpd():
+    reps = dash.parse_mpd((FIX / "aksor.mpd").read_text("utf-8"), MPD_URL)
+    video, audio = dash.choose(reps, 1080)
+    assert (video.kind, video.height) == ("video", 1080)
+    assert video.init == "https://cdn.example/video/a70/MC%20Entertainment/01/init-stream0.m4s"
+    assert video.segments[0].endswith("/chunk-stream0-00001.m4s")
+    # 41 explicit <S> + one with r="1" (2 segments) + last one = 44
+    assert len(video.segments) == 44 and video.segments[-1].endswith("-00044.m4s")
+    assert audio is not None and audio.lang == "rus"
+    assert audio.segments[-1].endswith("/chunk-stream1-00048.m4s")  # 1 + (45+1) + 1
+
+
+def test_dash_choose_and_templates():
+    mpd = """<?xml version="1.0"?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="static" mediaPresentationDuration="PT10S">
+ <BaseURL>media/</BaseURL>
+ <Period>
+  <AdaptationSet contentType="video">
+   <SegmentTemplate timescale="1" duration="4" media="$RepresentationID$/$Number$.m4s" initialization="$RepresentationID$/init.mp4"/>
+   <Representation id="v480" bandwidth="1" height="480"/>
+   <Representation id="v720" bandwidth="2" height="720"/>
+  </AdaptationSet>
+  <AdaptationSet contentType="audio" lang="en">
+   <Representation id="en" bandwidth="1"><BaseURL>audio_en.m4a</BaseURL></Representation>
+  </AdaptationSet>
+ </Period>
+</MPD>"""
+    reps = dash.parse_mpd(mpd, "https://h/x/manifest.mpd")
+    video, audio = dash.choose(reps, 600)
+    assert video.id == "v480"
+    assert video.segments == [f"https://h/x/media/v480/{n}.m4s" for n in (1, 2, 3)]  # ceil(10/4)
+    assert audio.segments == ["https://h/x/media/audio_en.m4a"] and audio.init is None
+    assert dash.choose(reps, 240)[0].id == "v480"  # nothing fits -> lowest
+
+
+def test_dash_rejects_live_and_durations():
+    with pytest.raises(dash.DashError):
+        dash.parse_mpd('<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="dynamic"/>', "https://h/")
+    assert dash.parse_duration("PT23M36.4S") == pytest.approx(1416.4)
+    assert dash.parse_duration("PT1H") == 3600
+
+
+def test_aksor_parse():
+    assert aksor.video_id("https://player.aksor.tv/video/a5f9304d89a798de464e8aa6dc4ab071") == \
+        "a5f9304d89a798de464e8aa6dc4ab071"
+    q = aksor.parse_qualities(json.loads((FIX / "aksor_api.json").read_text("utf-8")))
+    assert list(q) == [1080]
+    assert " " not in q[1080] and "MC%20Entertainment" in q[1080]
+    with pytest.raises(ExtractError):
+        aksor.parse_qualities({"qualities": {"q720": None}})
+
+
+def test_aksor_matches_fixture_videos():
+    ext = aksor.AksorExtractor()
+    assert {v.player_name for v in load_videos() if ext.matches(v)} <= {"Aksor"}
+
+
+def test_dash_download_mocked(tmp_path, monkeypatch):
+    import httpx
+
+    mpd = """<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="static" mediaPresentationDuration="PT4S"><Period>
+  <AdaptationSet contentType="video"><SegmentTemplate timescale="1" media="v$Number%03d$.m4s" initialization="vi.m4s">
+   <SegmentTimeline><S t="0" d="2" r="1"/></SegmentTimeline></SegmentTemplate><Representation id="0" bandwidth="1" height="720"/></AdaptationSet>
+  <AdaptationSet contentType="audio" lang="rus"><SegmentTemplate timescale="1" media="a$Number$.m4s" initialization="ai.m4s">
+   <SegmentTimeline><S t="0" d="4"/></SegmentTimeline></SegmentTemplate><Representation id="1" bandwidth="1"/></AdaptationSet>
+</Period></MPD>"""
+    seen = []
+
+    def handler(req):
+        seen.append(req.url.path)
+        return httpx.Response(200, text=mpd) if req.url.path.endswith(".mpd") else \
+            httpx.Response(200, content=req.url.path.encode())
+
+    calls = []
+
+    class Proc:
+        returncode = 0
+        stderr = ""
+
+    def fake_ffmpeg(args):
+        calls.append(args)
+        Path(args[-1]).write_bytes(Path(args[1]).read_bytes() + b"|" + Path(args[3]).read_bytes())
+        return Proc()
+
+    monkeypatch.setattr(hls, "find_ffmpeg", lambda: "ffmpeg")
+    monkeypatch.setattr(hls, "run_ffmpeg", fake_ffmpeg)
+    dest = tmp_path / "ep.mp4"
+    with httpx.Client(transport=httpx.MockTransport(handler)) as http:
+        out = dash.download("https://h/s/m.mpd", dest, http=http, workers=2)
+    assert out == dest
+    assert dest.read_bytes() == b"/s/vi.m4s/s/v001.m4s/s/v002.m4s|/s/ai.m4s/s/a1.m4s"
+    assert "-map" in calls[0] and not dest.with_name("ep.mp4.parts").exists()
+
+
+def test_dash_needs_ffmpeg(tmp_path, monkeypatch):
+    monkeypatch.setattr(hls, "find_ffmpeg", lambda: None)
+    with pytest.raises(dash.DashError, match="ffmpeg"):
+        dash.download("https://h/m.mpd", tmp_path / "x.mp4")

@@ -243,7 +243,7 @@ class MainWindow(QMainWindow):
 
     def _refresh_ffmpeg_status(self) -> None:
         if not hls.find_ffmpeg():
-            self.statusBar().addPermanentWidget(QLabel("ffmpeg not found: Kodik episodes save as .ts"))
+            self.statusBar().addPermanentWidget(QLabel("ffmpeg not found: Kodik saves as .ts, Aksor won't work"))
 
     def _out_dir(self) -> Path:
         return Path(self.out_edit.text().strip() or self.cfg.effective_output_dir).expanduser()
@@ -374,7 +374,10 @@ class MainWindow(QMainWindow):
             bits.append(f"{anime.episodes} ep.")
         others = ", ".join(anime.other_titles[:2])
         self.sub_lbl.setText(" · ".join(b for b in bits if b) + (f"\n{others}" if others else ""))
-        self.dubs = [d for d in core.group_by_dub(videos) if d.supported]
+        options = core.group_by_dub(videos)
+        if note := core.unsupported_note(options):
+            self.sub_lbl.setText(f"{self.sub_lbl.text()}\n{note}")
+        self.dubs = [d for d in options if d.supported]
         self.dub_combo.blockSignals(True)
         self.dub_combo.clear()
         for d in self.dubs:
@@ -382,7 +385,7 @@ class MainWindow(QMainWindow):
             self.dub_combo.addItem(f"{d.dub_name}  —  {len(d.supported_episodes)} ep. · {players}")
         self.dub_combo.blockSignals(False)
         if not self.dubs:
-            self.sub_lbl.setText(self.sub_lbl.text() + "\nNo dubs on supported players (CVH, Kodik).")
+            self.sub_lbl.setText(self.sub_lbl.text() + "\nNo downloadable dubs (supported: CVH, Kodik, Aksor).")
             return
         self._set_details_enabled(True)
         self._on_dub_changed()

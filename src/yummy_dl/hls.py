@@ -109,6 +109,46 @@ def _fetch_segment(http: httpx.Client, url: str, target: Path, headers: dict[str
             time.sleep(1.5 * (attempt + 1))
 
 
+def fetch_all(
+    http: httpx.Client,
+    jobs: list[tuple[str, Path]],
+    *,
+    headers: dict[str, str],
+    workers: int = 8,
+    progress: ProgressFn | None = None,
+) -> None:
+    """Download (url, file) pairs in parallel, skipping files that already exist (resume)."""
+    done = sum(f.exists() for _, f in jobs)
+    total = len(jobs)
+    if progress:
+        progress(done, total)
+    todo = [(u, f) for u, f in jobs if not f.exists()]
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        futures = [pool.submit(_fetch_segment, http, u, f, headers) for u, f in todo]
+        try:
+            for fut in as_completed(futures):
+                fut.result()
+                done += 1
+                if progress:
+                    progress(done, total)
+        except BaseException:
+            for fut in futures:
+                fut.cancel()
+            raise
+
+
+def run_ffmpeg(args: list[str]) -> subprocess.CompletedProcess:
+    ffmpeg = find_ffmpeg()
+    if not ffmpeg:
+        raise HlsError("ffmpeg not found")
+    return subprocess.run(
+        [ffmpeg, "-y", "-loglevel", "error", *args],
+        capture_output=True,
+        text=True,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+
+
 def download(
     playlist_url: str,
     dest: Path,
@@ -132,24 +172,7 @@ def download(
         parts = dest.with_name(dest.name + ".parts")
         parts.mkdir(exist_ok=True)
         files = [parts / f"{i:05d}.ts" for i in range(len(segments))]
-
-        done = sum(f.exists() for f in files)
-        total = len(segments)
-        if progress:
-            progress(done, total)
-        todo = [(u, f) for u, f in zip(segments, files) if not f.exists()]
-        with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
-            futures = [pool.submit(_fetch_segment, http, u, f, headers) for u, f in todo]
-            try:
-                for fut in as_completed(futures):
-                    fut.result()
-                    done += 1
-                    if progress:
-                        progress(done, total)
-            except BaseException:
-                for fut in futures:
-                    fut.cancel()
-                raise
+        fetch_all(http, list(zip(segments, files)), headers=headers, workers=workers, progress=progress)
     finally:
         if own:
             http.close()
@@ -161,15 +184,9 @@ def download(
                 shutil.copyfileobj(src, out)
 
     result = ts_path
-    ffmpeg = find_ffmpeg()
-    if ffmpeg and dest.suffix.lower() != ".ts":
-        proc = subprocess.run(
-            [ffmpeg, "-y", "-loglevel", "error", "-i", str(ts_path), "-c", "copy",
-             "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", str(dest)],
-            capture_output=True,
-            text=True,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
+    if find_ffmpeg() and dest.suffix.lower() != ".ts":
+        proc = run_ffmpeg(["-i", str(ts_path), "-c", "copy", "-bsf:a", "aac_adtstoasc",
+                           "-movflags", "+faststart", str(dest)])
         if proc.returncode == 0:
             ts_path.unlink()
             result = dest

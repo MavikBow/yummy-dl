@@ -80,7 +80,7 @@ class Video:
 class Stream:
     """Resolved playable stream: quality (height) -> URL.
 
-    kind "hls": URLs are m3u8 playlists; kind "file": URLs are plain media files (e.g. MP4).
+    kind "hls": m3u8 playlists; "dash": .mpd manifests; "file": plain media files (e.g. MP4).
     """
 
     qualities: dict[int, str]

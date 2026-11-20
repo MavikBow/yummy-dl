@@ -82,18 +82,21 @@ optional comment, and the ffmpeg arguments with placeholders:
 | `{input}` | the episode file |
 | `{name}` | its file name without extension |
 | `{ext}` | its extension |
+| `{episode}` | the episode number, e.g. `01` (empty for files not named by yummy-dl) |
 | `{outdir}` | where the result must be written |
 
 ```text
 -i {input} -c:v libx264 -c:a libmp3lame -b:a 192k -vf scale=-2:720 {outdir}/{name}.mkv
 ```
 
-- Placeholders never need quotes, even for names with spaces or Cyrillic letters.
+- Placeholders never need quotes, even for names with spaces or Cyrillic letters. Only spaces you type yourself
+  do: write `"{outdir}/{episode} {name}.mkv"`, because without the quotes ffmpeg would get two arguments.
 - **After a successful run the original is deleted** and the result takes its place. If ffmpeg fails or you
   cancel, the original is kept.
 - *Save the results in a folder named after the video* puts the outputs in `<Title>/<episode name>/`. Use it
   when cutting into parts (`-f segment -segment_time 600 … {outdir}/{name}_%02d.mkv`).
-- Start output names with `{name}`, so the app still marks the episode as downloaded (✓) and doesn't
+- Keep `{name}` in output names, either at the start or right after `{episode}` (`"{outdir}/{episode} {name}.mkv"`
+  gives `01 Берсерк - E01 [Dub].mkv`). That way the app still marks the episode as downloaded (✓) and doesn't
   download it again.
 - Run a script from **Scripts → <name>** on files or a whole folder, or right-click finished downloads in the
   queue. Tick *Run automatically after each download* on one script to convert every new episode.

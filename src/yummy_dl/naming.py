@@ -27,5 +27,20 @@ def episode_label(number: str) -> str:
     return f"E{int(n):02d}" if n.is_integer() else f"E{n:g}"
 
 
+def episode_number(stem: str) -> str:
+    """Episode number from an episode file name made by `episode_filename`, else ''.
+
+    'Берсерк - E01 [AniDub]' -> '01', 'X - E12.5 [Dub]' -> '12.5', 'X - OVA [Dub]' -> 'OVA'.
+    """
+    m = _EPISODE_RE.match(stem)
+    if not m:
+        return ""
+    label = m.group(1)
+    return label[1:] if re.fullmatch(r"E\d+(?:\.\d+)?", label) else label
+
+
+_EPISODE_RE = re.compile(r"^.+ - ([^\[\]]+?) \[[^\[\]]*\]$")
+
+
 def episode_filename(title: str, number: str, dub: str, ext: str = "mp4") -> str:
     return sanitize(f"{sanitize(title, 80)} - {episode_label(number)} [{sanitize(dub, 40)}]", 200) + f".{ext}"

@@ -155,3 +155,31 @@ def test_cancel_keeps_original(tmp_path, monkeypatch):
     with pytest.raises(core.Cancelled):
         scripts.run_script(example("720p"), src, progress=cancel)
     assert src.exists() and [p.name for p in tmp_path.iterdir()] == ["ep.mp4"]
+
+
+def test_episode_number():
+    from yummy_dl.naming import episode_filename, episode_number
+
+    assert episode_number(Path(episode_filename("Берсерк", "1", "MC Entertainment")).stem) == "01"
+    assert episode_number(Path(episode_filename("Show - Part 2", "12.5", "Dub")).stem) == "12.5"
+    assert episode_number(Path(episode_filename("Show", "OVA", "Dub")).stem) == "OVA"
+    assert episode_number("some random video") == ""
+
+
+def test_episode_placeholder():
+    assert any("quotes" in p for p in scripts.validate(Script("x", "-i {input} {outdir}/{episode} {name}.mkv")))
+    s = Script("x", '-i {input} "{outdir}/{episode} {name}.mkv"')
+    assert scripts.validate(s) == []
+    args = scripts.build_args(s, Path("/a/Шоу - E07 [Дуб].mp4"), Path("/o"))
+    assert args[-1] == "/o/07 Шоу - E07 [Дуб].mkv"
+    dotted = Script("x", '-i {input} "{outdir}/{episode}. {name}.mkv"')
+    assert scripts.build_args(dotted, Path("/a/holiday.mp4"), Path("/o"))[-1] == "/o/holiday.mkv"
+
+
+def test_existing_download_with_episode_prefix(tmp_path):
+    target = tmp_path / "Show - E03 [Dub].mp4"
+    (tmp_path / "04 Show - E03 [Dub].mkv").write_bytes(b"x")  # wrong number in front
+    (tmp_path / "Other Show - E03 [Dub].mkv").write_bytes(b"x")  # another title ending the same way
+    assert core.existing_download(target) is None
+    (tmp_path / "03. Show - E03 [Dub].mkv").write_bytes(b"x")
+    assert core.existing_download(target) == tmp_path / "03. Show - E03 [Dub].mkv"

@@ -11,7 +11,7 @@ import httpx
 from . import dash, direct, hls
 from .extractors import EXTRACTORS, UNSUPPORTED_REASONS, ExtractError, find_extractor
 from .models import Anime, Video
-from .naming import episode_filename, sanitize
+from .naming import episode_filename, episode_number, sanitize
 
 
 class Cancelled(Exception):
@@ -127,7 +127,8 @@ def existing_download(target: Path) -> Path | None:
     """The finished file for this episode, if any.
 
     Besides the download itself this finds what a user script turned it into (the original is
-    deleted then): `<stem>.mkv`, `<stem>_00.mkv`, or a folder named `<stem>` holding the parts.
+    deleted then): `<stem>.mkv`, `<stem>_00.mkv`, or a folder named `<stem>` holding the parts,
+    optionally with the episode number in front (`01 <stem>.mkv`, `01. <stem>.mkv`).
     """
     if target.with_name(target.name + ".parts").exists():
         return None  # unfinished download; resume it
@@ -137,10 +138,12 @@ def existing_download(target: Path) -> Path | None:
     folder, stem = target.parent, target.stem
     if not folder.is_dir():
         return None
+    episode = episode_number(stem)
     for p in sorted(folder.iterdir()):
-        if not p.name.startswith(stem):
+        at = p.name.find(stem)
+        if at < 0 or (at > 0 and (not episode or p.name[:at].strip(" ._-") != episode)):
             continue
-        rest = p.name[len(stem):]
+        rest = p.name[at + len(stem):]
         if p.is_dir():
             if rest == "" and any(p.iterdir()):
                 return p

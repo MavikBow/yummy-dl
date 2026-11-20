@@ -33,9 +33,12 @@ from ..scripts import Script
 PLACEHOLDER_HELP = (
     "Write the ffmpeg arguments; <code>ffmpeg</code> itself is optional. Placeholders:<br>"
     "<code>{input}</code> the episode file &nbsp; <code>{name}</code> its name without extension &nbsp; "
-    "<code>{ext}</code> its extension &nbsp; <code>{outdir}</code> where to write the result<br>"
-    "No quotes needed around placeholders, even for names with spaces. "
-    "Start output names with <code>{name}</code> so the app still sees the episode as downloaded.<br>"
+    "<code>{ext}</code> its extension &nbsp; <code>{episode}</code> episode number (01) &nbsp; "
+    "<code>{outdir}</code> where to write the result<br>"
+    "Placeholders need no quotes, but quote a path where <i>you</i> type a space: "
+    "<code>\"{outdir}/{episode} {name}.mkv\"</code><br>"
+    "Keep <code>{name}</code> in output names (optionally after <code>{episode}</code>) so the app still "
+    "sees the episode as downloaded.<br>"
     "<b>After a successful run the original file is deleted</b>; if ffmpeg fails it is kept."
 )
 

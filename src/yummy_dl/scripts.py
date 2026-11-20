@@ -4,6 +4,7 @@ A script's command is the ffmpeg argument list with placeholders:
     {input}   full path of the episode file
     {name}    its file name without extension
     {ext}     its extension, without the dot
+    {episode} the episode number from a yummy-dl file name ('01', '12.5'); empty for other files
     {outdir}  folder the outputs must be written to
 
 The command is split into arguments first and placeholders are filled in afterwards, so paths with
@@ -26,9 +27,10 @@ from pathlib import Path
 from . import config as cfgmod
 from . import hls
 from .core import VIDEO_EXTS
+from .naming import episode_number
 
 TMP_PREFIX = ".yummy-tmp-"
-PLACEHOLDERS = ("{input}", "{name}", "{ext}", "{outdir}")
+PLACEHOLDERS = ("{input}", "{name}", "{ext}", "{episode}", "{outdir}")
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
@@ -137,13 +139,22 @@ def validate(script: Script) -> list[str]:
         problems.append("The command must read {input}, e.g. -i {input}.")
     if "{outdir}" not in joined:
         problems.append("The command must write into {outdir}, e.g. {outdir}/{name}.mkv.")
+    for prev, arg in zip(args, args[1:]):
+        if "{outdir}" in prev and not arg.startswith("-") and any(p in arg for p in PLACEHOLDERS):
+            problems.append(f'The output path has a space in it, so it was split in two. Wrap it in quotes: '
+                            f'"{prev} {arg}".')
+            break
     return problems
 
 
 def build_args(script: Script, src: Path, outdir: Path) -> list[str]:
-    values = {"{input}": str(src), "{name}": src.stem, "{ext}": src.suffix.lstrip("."), "{outdir}": str(outdir)}
+    episode = episode_number(src.stem)
+    values = {"{input}": str(src), "{name}": src.stem, "{ext}": src.suffix.lstrip("."), "{episode}": episode,
+              "{outdir}": str(outdir)}
     out = []
     for arg in split_command(script.command):
+        if not episode:  # "{episode}. {name}" -> "{name}" for files without an episode number
+            arg = re.sub(r"\{episode\}[ ._-]*", "", arg)
         for key, value in values.items():
             arg = arg.replace(key, value)
         out.append(arg)

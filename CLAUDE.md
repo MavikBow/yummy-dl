@@ -30,7 +30,7 @@ Pipeline: `api.YummyClient` (search / anime / videos) → `models.Video` (one pe
 - **Resume contract**: partial data lives in `<target>.parts` next to the output; its presence means "unfinished". `core.existing_download` treats a file as done only when no `.parts` sibling exists. Cancellation = raise `core.Cancelled` from the progress callback; partial files are kept.
 - **ffmpeg lookup**: `hls.find_ffmpeg()` — `YUMMY_FFMPEG` env, then next to the frozen exe / cwd, then PATH.
 - **Config** (`config.py`): TOML in the platform config dir; token also from `YUMMY_APP_TOKEN`, sent as `X-Application` header.
-- **GUI** (`gui/`): `window.py` main window, `workers.py` threading. One-off API calls go through `run_bg` (Qt thread pool, callbacks on GUI thread, must tolerate the window being closed). Downloads run one job at a time on the `DownloadManager` daemon thread, reporting via Qt signals. `gui/__init__.py` imports PySide6 lazily so the CLI works without Qt; assets are resolved with `gui.asset()` so they work from source, wheel and PyInstaller.
+- **GUI** (`gui/`): `window.py` main window, `help.py` Help dialog (quick start, guided token setup, CLI cheat sheet; keep its CLI reference in sync when CLI options change), `workers.py` threading. One-off API calls go through `run_bg` (Qt thread pool, callbacks on GUI thread, must tolerate the window being closed). Downloads run one job at a time on the `DownloadManager` daemon thread, reporting via Qt signals. `gui/__init__.py` imports PySide6 lazily so the CLI works without Qt; assets are resolved with `gui.asset()` so they work from source, wheel and PyInstaller.
 
 ## Tests
 

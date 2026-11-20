@@ -233,6 +233,14 @@ def show() -> None:
 
 
 @app.command()
+def gui() -> None:
+    """Open the desktop window (needs: pip install 'yummy-dl[gui]')."""
+    from .gui import main as gui_main
+
+    raise typer.Exit(gui_main())
+
+
+@app.command()
 def interactive() -> None:
     """Guided mode: search, pick a dub and episodes, download. Loops until you leave it empty."""
     console.print(f"[bold]yummy-dl[/bold] — downloads go to {cfgmod.load().effective_output_dir}")

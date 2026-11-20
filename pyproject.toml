@@ -16,10 +16,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pyinstaller>=6.10"]
+gui = ["PySide6-Essentials>=6.7"]
+dev = ["pytest>=8", "pyinstaller>=6.10", "PySide6-Essentials>=6.7"]
 
 [project.scripts]
 yummy-dl = "yummy_dl.cli:main"
+
+[project.gui-scripts]
+yummy-dl-gui = "yummy_dl.gui:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/yummy_dl"]

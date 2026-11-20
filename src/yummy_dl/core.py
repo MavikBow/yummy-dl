@@ -14,6 +14,10 @@ from .models import Anime, Video
 from .naming import episode_filename, sanitize
 
 
+class Cancelled(Exception):
+    """Raise from a progress callback to abort a download (partial files are kept for resume)."""
+
+
 def _ep_key(number: str) -> tuple[int, float, str]:
     try:
         return (0, float(number), "")

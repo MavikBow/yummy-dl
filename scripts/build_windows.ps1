@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Build dist\yummy-dl.exe (single file) with PyInstaller.
+  Build dist\yummy-dl.exe (console CLI) and dist\yummy-dl-gui.exe (window, PySide6) with PyInstaller.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
@@ -24,20 +24,28 @@ if (-not (Test-Path "$venv\Scripts\python.exe")) {
 }
 $py = "$venv\Scripts\python.exe"
 & $py -m pip install --quiet --upgrade pip
-& $py -m pip install --quiet . "pyinstaller>=6.10"
+& $py -m pip install --quiet ".[gui]" "pyinstaller>=6.10"
 if ($LASTEXITCODE) { throw "pip install failed" }
 
 & $py -m PyInstaller --noconfirm --clean --onefile --console `
     --name yummy-dl `
     --collect-submodules yummy_dl `
     --collect-submodules rich._unicode_data `
+    --exclude-module PySide6 `
     --distpath dist --workpath build `
     src\yummy_dl\__main__.py
-if ($LASTEXITCODE) { throw "PyInstaller failed" }
+if ($LASTEXITCODE) { throw "PyInstaller (CLI) failed" }
+
+& $py -m PyInstaller --noconfirm --onefile --windowed `
+    --name yummy-dl-gui `
+    --collect-submodules yummy_dl `
+    --distpath dist --workpath build `
+    src\yummy_dl\gui\__main__.py
+if ($LASTEXITCODE) { throw "PyInstaller (GUI) failed" }
 
 & dist\yummy-dl.exe --help | Out-Null
 if ($LASTEXITCODE) { throw "built exe failed to run" }
-Write-Host "Built dist\yummy-dl.exe"
+Write-Host "Built dist\yummy-dl.exe and dist\yummy-dl-gui.exe"
 
 if ($BundleFfmpeg) {
     if (-not $FfmpegPath) {
@@ -47,9 +55,9 @@ if ($BundleFfmpeg) {
     }
     $stage = Join-Path $root "dist\yummy-dl"
     New-Item -ItemType Directory -Force $stage | Out-Null
-    Copy-Item dist\yummy-dl.exe, $FfmpegPath, README.md $stage -Force
+    Copy-Item dist\yummy-dl.exe, dist\yummy-dl-gui.exe, $FfmpegPath, README.md $stage -Force
     $zip = "dist\yummy-dl-windows.zip"
     if (Test-Path $zip) { Remove-Item $zip }
     Compress-Archive -Path "$stage\*" -DestinationPath $zip
-    Write-Host "Built $zip (exe + ffmpeg)"
+    Write-Host "Built $zip (exes + ffmpeg)"
 }

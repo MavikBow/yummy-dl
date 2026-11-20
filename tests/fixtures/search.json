@@ -1,0 +1,394 @@
+{
+ "response": [
+  {
+   "description": "Таинственный воин, называющий себя Черным мечником, жаждет заполучить голову короля страны под названием Midland. Когда он борется с приспешниками короля, их крики и боль, заставляют вспоминать о прошлом таинственного воина, о той жизни, которая привела его к мести и охоте за головами. И вот когда он остается один в лесу, в его глазах проносится вся жизнь, от того момента когда он был еще мальчишкой и учился управляться с мечом. До того как он вступил в Банду Ястреба, под предводительством классного мечника Гриффита, и как он добившись успеха и получив дворянский титул, потерял всех друзей, свою возлюбленную, но не веру в самого себя.",
+   "poster": {
+    "fullsize": "//static.yani.tv/posters/full/1636671122.jpg",
+    "big": "//static.yani.tv/posters/big/1636671122.webp",
+    "small": "//static.yani.tv/posters/small/1636671122.webp",
+    "medium": "//static.yani.tv/posters/medium/1636671122.webp",
+    "huge": "//static.yani.tv/posters/huge/1636671122.avif",
+    "mega": "//static.yani.tv/posters/mega/1636671122.avif"
+   },
+   "title": "Берсерк",
+   "anime_url": "berserk",
+   "anime_id": 70,
+   "rating": {
+    "average": 9.05927800702638,
+    "counters": 7507,
+    "kp_rating": 8.6,
+    "anidub_rating": 0,
+    "myanimelist_rating": 8.61,
+    "worldart_rating": 8.9,
+    "shikimori_rating": 8.88633649932157
+   },
+   "genres": [
+    {
+     "title": "Сэйнэн",
+     "url": "/catalog/category/sejnen",
+     "id": 10,
+     "alias": "sejnen"
+    },
+    {
+     "title": "Драма",
+     "url": "/catalog/category/drama",
+     "id": 15,
+     "alias": "drama"
+    },
+    {
+     "title": "Приключения",
+     "url": "/catalog/category/priklyucheniya",
+     "id": 32,
+     "alias": "priklyucheniya"
+    },
+    {
+     "title": "Ужасы",
+     "url": "/catalog/category/ugasy",
+     "id": 36,
+     "alias": "ugasy"
+    },
+    {
+     "title": "Фэнтези",
+     "url": "/catalog/category/fentezi",
+     "id": 42,
+     "alias": "fentezi"
+    },
+    {
+     "title": "Демоны",
+     "url": "/catalog/category/demony",
+     "id": 48,
+     "alias": "demony"
+    },
+    {
+     "title": "Темное фэнтези",
+     "url": "/catalog/category/temnoe-fentezi",
+     "id": 56,
+     "alias": "temnoe-fentezi"
+    },
+    {
+     "title": "Экшен",
+     "url": "/catalog/category/ekshen",
+     "id": 63,
+     "alias": "ekshen"
+    },
+    {
+     "title": "Сражения на мечах",
+     "url": "/catalog/category/srazheniya-na-mechah",
+     "id": 69,
+     "alias": "srazheniya-na-mechah"
+    },
+    {
+     "title": "Альтернативная история",
+     "url": "/catalog/category/al-ternativnaya-istoriya",
+     "id": 72,
+     "alias": "al-ternativnaya-istoriya"
+    },
+    {
+     "title": "Военная тематика",
+     "url": "/catalog/category/voennaya-tematika",
+     "id": 76,
+     "alias": "voennaya-tematika"
+    },
+    {
+     "title": "Психология",
+     "url": "/catalog/category/psihologiya",
+     "id": 98,
+     "alias": "psihologiya"
+    },
+    {
+     "title": "Безумие",
+     "url": "/catalog/category/bezumie",
+     "id": 110,
+     "alias": "bezumie"
+    }
+   ],
+   "year": 1997,
+   "min_age": {
+    "value": 5,
+    "title_long": "R+ (есть сцены легкой эротики)",
+    "title": "R+"
+   },
+   "views": 3196370,
+   "season": 4,
+   "anime_status": {
+    "value": 0,
+    "title": "вышел",
+    "alias": "released",
+    "class": ""
+   },
+   "type": {
+    "name": "Сериал",
+    "value": 1,
+    "shortname": "ТВ",
+    "alias": "tv"
+   },
+   "remote_ids": {
+    "worldart_id": 3,
+    "shikimori_id": 33,
+    "anidub_id": 0,
+    "anilibria_alias": "",
+    "myanimelist_id": 33,
+    "kp_id": 257376,
+    "worldart_type": "animation",
+    "sr_id": 0
+   },
+   "top": {
+    "category": 12,
+    "global": 17
+   },
+   "blocked_in": [
+    "IN"
+   ]
+  },
+  {
+   "description": "Гатс всю осознанную жизнь воевал. Главный герой привык к постоянным сражениям и старался делать все возможное, пытаясь добиваться победы. Это давалось довольно непросто и нелегко, но он был готов сделать всё возможное, в попытках достичь положительного результата. У его не было семьи, но неожиданно его жизнь кардинальным образом поменялась. Он встретил Гриффита. Тот возглавлял опасную банду Ястреба, и все люди, входившие в неё, стали для Гатса настоящей семьей.",
+   "poster": {
+    "fullsize": "//static.yani.tv/posters/full/1636671130.jpg",
+    "big": "//static.yani.tv/posters/big/1636671130.webp",
+    "small": "//static.yani.tv/posters/small/1636671130.webp",
+    "medium": "//static.yani.tv/posters/medium/1636671130.webp",
+    "huge": "//static.yani.tv/posters/huge/1636671130.avif",
+    "mega": "//static.yani.tv/posters/mega/1636671130.avif"
+   },
+   "title": "Берсерк 2",
+   "anime_url": "berserk-2016",
+   "anime_id": 74,
+   "rating": {
+    "average": 6.51969012213032,
+    "counters": 1549,
+    "kp_rating": 6.6,
+    "anidub_rating": 0,
+    "myanimelist_rating": 6.34,
+    "worldart_rating": 7.1,
+    "shikimori_rating": 6.52433721419554
+   },
+   "genres": [
+    {
+     "title": "Сэйнэн",
+     "url": "/catalog/category/sejnen",
+     "id": 10,
+     "alias": "sejnen"
+    },
+    {
+     "title": "Драма",
+     "url": "/catalog/category/drama",
+     "id": 15,
+     "alias": "drama"
+    },
+    {
+     "title": "Приключения",
+     "url": "/catalog/category/priklyucheniya",
+     "id": 32,
+     "alias": "priklyucheniya"
+    },
+    {
+     "title": "Романтика",
+     "url": "/catalog/category/romantika",
+     "id": 33,
+     "alias": "romantika"
+    },
+    {
+     "title": "Ужасы",
+     "url": "/catalog/category/ugasy",
+     "id": 36,
+     "alias": "ugasy"
+    },
+    {
+     "title": "Фэнтези",
+     "url": "/catalog/category/fentezi",
+     "id": 42,
+     "alias": "fentezi"
+    },
+    {
+     "title": "Темное фэнтези",
+     "url": "/catalog/category/temnoe-fentezi",
+     "id": 56,
+     "alias": "temnoe-fentezi"
+    },
+    {
+     "title": "Экшен",
+     "url": "/catalog/category/ekshen",
+     "id": 63,
+     "alias": "ekshen"
+    },
+    {
+     "title": "Военная тематика",
+     "url": "/catalog/category/voennaya-tematika",
+     "id": 76,
+     "alias": "voennaya-tematika"
+    },
+    {
+     "title": "Сверхъестественное",
+     "url": "/catalog/category/sverh-estestvennoe",
+     "id": 103,
+     "alias": "sverh-estestvennoe"
+    }
+   ],
+   "year": 2016,
+   "min_age": {
+    "value": 5,
+    "title_long": "R+ (есть сцены легкой эротики)",
+    "title": "R+"
+   },
+   "views": 538353,
+   "season": 3,
+   "anime_status": {
+    "value": 0,
+    "title": "вышел",
+    "alias": "released",
+    "class": ""
+   },
+   "type": {
+    "name": "Сериал",
+    "value": 1,
+    "shortname": "ТВ",
+    "alias": "tv"
+   },
+   "remote_ids": {
+    "worldart_id": 8654,
+    "shikimori_id": 32379,
+    "anidub_id": 0,
+    "anilibria_alias": "berserk-2016",
+    "myanimelist_id": 32379,
+    "kp_id": 991695,
+    "worldart_type": "animation",
+    "sr_id": 0
+   },
+   "top": {
+    "category": 4237,
+    "global": 10502
+   },
+   "blocked_in": [
+    "IN"
+   ]
+  },
+  {
+   "description": "Подстегиваемый пламенем, бушующим в его сердце, Черный Мечник Гатс продолжает свои, казалось бы, бесконечные поиски мести. На его пути стоят отвратительные преступники, одержимые злые духи и набожное дитя Божье. Даже когда это уносит его жизнь, Гатс продолжает сражаться со своими врагами, которые обладают отталкивающей и бесчеловечной силой, используя только свое тело и меч — свою человеческую силу.",
+   "poster": {
+    "fullsize": "//static.yani.tv/posters/full/1636671131.jpg",
+    "big": "//static.yani.tv/posters/big/1636671131.webp",
+    "small": "//static.yani.tv/posters/small/1636671131.webp",
+    "medium": "//static.yani.tv/posters/medium/1636671131.webp",
+    "huge": "//static.yani.tv/posters/huge/1636671131.avif",
+    "mega": "//static.yani.tv/posters/mega/1636671131.avif"
+   },
+   "title": "Берсерк 3",
+   "anime_url": "berserk-tv-3",
+   "anime_id": 75,
+   "rating": {
+    "average": 6.80471124612543,
+    "counters": 1316,
+    "kp_rating": 6.6,
+    "anidub_rating": 0,
+    "myanimelist_rating": 6.58,
+    "worldart_rating": 7.3,
+    "shikimori_rating": 6.82767248389316
+   },
+   "genres": [
+    {
+     "title": "Сэйнэн",
+     "url": "/catalog/category/sejnen",
+     "id": 10,
+     "alias": "sejnen"
+    },
+    {
+     "title": "Драма",
+     "url": "/catalog/category/drama",
+     "id": 15,
+     "alias": "drama"
+    },
+    {
+     "title": "Приключения",
+     "url": "/catalog/category/priklyucheniya",
+     "id": 32,
+     "alias": "priklyucheniya"
+    },
+    {
+     "title": "Романтика",
+     "url": "/catalog/category/romantika",
+     "id": 33,
+     "alias": "romantika"
+    },
+    {
+     "title": "Ужасы",
+     "url": "/catalog/category/ugasy",
+     "id": 36,
+     "alias": "ugasy"
+    },
+    {
+     "title": "Фэнтези",
+     "url": "/catalog/category/fentezi",
+     "id": 42,
+     "alias": "fentezi"
+    },
+    {
+     "title": "Демоны",
+     "url": "/catalog/category/demony",
+     "id": 48,
+     "alias": "demony"
+    },
+    {
+     "title": "Магия",
+     "url": "/catalog/category/magiya",
+     "id": 51,
+     "alias": "magiya"
+    },
+    {
+     "title": "Темное фэнтези",
+     "url": "/catalog/category/temnoe-fentezi",
+     "id": 56,
+     "alias": "temnoe-fentezi"
+    },
+    {
+     "title": "Экшен",
+     "url": "/catalog/category/ekshen",
+     "id": 63,
+     "alias": "ekshen"
+    },
+    {
+     "title": "Военная тематика",
+     "url": "/catalog/category/voennaya-tematika",
+     "id": 76,
+     "alias": "voennaya-tematika"
+    }
+   ],
+   "year": 2017,
+   "min_age": {
+    "value": 5,
+    "title_long": "R+ (есть сцены легкой эротики)",
+    "title": "R+"
+   },
+   "views": 326763,
+   "season": 2,
+   "anime_status": {
+    "value": 0,
+    "title": "вышел",
+    "alias": "released",
+    "class": ""
+   },
+   "type": {
+    "name": "Сериал",
+    "value": 1,
+    "shortname": "ТВ",
+    "alias": "tv"
+   },
+   "remote_ids": {
+    "worldart_id": 8932,
+    "shikimori_id": 34055,
+    "anidub_id": 0,
+    "anilibria_alias": "berserk-2017",
+    "myanimelist_id": 34055,
+    "kp_id": 991695,
+    "worldart_type": "animation",
+    "sr_id": 0
+   },
+   "top": {
+    "category": 4122,
+    "global": 10324
+   },
+   "blocked_in": [
+    "IN"
+   ]
+  }
+ ]
+}

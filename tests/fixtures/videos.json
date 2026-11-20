@@ -1,0 +1,715 @@
+{
+ "response": [
+  {
+   "video_id": 692360,
+   "data": {
+    "player": "Плеер Aksor",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 1
+   },
+   "number": "1",
+   "date": 1727794455,
+   "iframe_url": "https://player.aksor.tv/video/a5f9304d89a798de464e8aa6dc4ab071",
+   "index": 152297,
+   "skips": {
+    "opening": {
+     "time": 58,
+     "length": 89
+    },
+    "ending": {
+     "time": 1322,
+     "length": 89
+    }
+   },
+   "views": 2655,
+   "duration": 1416
+  },
+  {
+   "video_id": 692361,
+   "data": {
+    "player": "Плеер Aksor",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 1
+   },
+   "number": "2",
+   "date": 1727794455,
+   "iframe_url": "https://player.aksor.tv/video/8b2d352709b33d157bb1cf5471c49d3f",
+   "index": 152298,
+   "skips": {
+    "opening": {
+     "time": 26,
+     "length": 59
+    },
+    "ending": {
+     "time": 1300,
+     "length": 99
+    }
+   },
+   "views": 917,
+   "duration": 1417
+  },
+  {
+   "video_id": 692362,
+   "data": {
+    "player": "Плеер Aksor",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 1
+   },
+   "number": "3",
+   "date": 1727794455,
+   "iframe_url": "https://player.aksor.tv/video/84bac36017f9c4a4c09fb1db4638a831",
+   "index": 152299,
+   "skips": {
+    "opening": {
+     "time": 70,
+     "length": 59
+    },
+    "ending": {
+     "time": 1302,
+     "length": 89
+    }
+   },
+   "views": 717,
+   "duration": 1416
+  },
+  {
+   "video_id": 444419,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 2
+   },
+   "number": "1",
+   "date": 1677764372,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=36&season=1&episode=1&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152202,
+   "skips": {
+    "opening": {
+     "time": 74,
+     "length": 69
+    },
+    "ending": {
+     "time": 1298,
+     "length": 89
+    }
+   },
+   "views": 625,
+   "duration": 1417
+  },
+  {
+   "video_id": 444421,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 2
+   },
+   "number": "2",
+   "date": 1677764372,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=36&season=1&episode=2&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152204,
+   "skips": {
+    "opening": {
+     "time": 22,
+     "length": 59
+    },
+    "ending": {
+     "time": 1298,
+     "length": 119
+    }
+   },
+   "views": 342,
+   "duration": 1417
+  },
+  {
+   "video_id": 444423,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 2
+   },
+   "number": "3",
+   "date": 1677764372,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=36&season=1&episode=3&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152206,
+   "skips": {
+    "opening": {
+     "time": 67,
+     "length": 59
+    },
+    "ending": {
+     "time": 1298,
+     "length": 119
+    }
+   },
+   "views": 296,
+   "duration": 1417
+  },
+  {
+   "video_id": 152102,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 4
+   },
+   "number": "1",
+   "date": 0,
+   "iframe_url": "//kodikplayer.com/serial/8293/87b2b1ee8663176c299bb3602014f4b0/720p?season=1&only_episode=true&episode=1",
+   "index": 152102,
+   "skips": {
+    "opening": {
+     "time": 77,
+     "length": 64
+    },
+    "ending": {
+     "time": 1303,
+     "length": 109
+    }
+   },
+   "views": 6271,
+   "duration": 1419
+  },
+  {
+   "video_id": 152103,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 4
+   },
+   "number": "2",
+   "date": 0,
+   "iframe_url": "//kodikplayer.com/serial/8293/87b2b1ee8663176c299bb3602014f4b0/720p?season=1&only_episode=true&episode=2",
+   "index": 152103,
+   "skips": {
+    "opening": {
+     "time": 23,
+     "length": 59
+    },
+    "ending": {
+     "time": 1297,
+     "length": 114
+    }
+   },
+   "views": 4054,
+   "duration": 1419
+  },
+  {
+   "video_id": 152104,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 4
+   },
+   "number": "3",
+   "date": 0,
+   "iframe_url": "//kodikplayer.com/serial/8293/87b2b1ee8663176c299bb3602014f4b0/720p?season=1&only_episode=true&episode=3",
+   "index": 152104,
+   "skips": {
+    "opening": {
+     "time": 68,
+     "length": 44
+    },
+    "ending": {
+     "time": 1298,
+     "length": 114
+    }
+   },
+   "views": 3570,
+   "duration": 1419
+  },
+  {
+   "video_id": 869639,
+   "data": {
+    "player": "Плеер CVH",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 3
+   },
+   "number": "1",
+   "date": 1753038420,
+   "iframe_url": "//ru.yummyani.me/iframeCVH.html?dubbing_code=MC+Entertainment&anime_id=33&episode=1&dubbing=%D0%9E%D0%B7%D0%B2%D1%83%D1%87%D0%BA%D0%B0+MC+Entertainment",
+   "index": 152417,
+   "skips": {
+    "opening": null,
+    "ending": null
+   },
+   "views": 3883,
+   "duration": 1419
+  },
+  {
+   "video_id": 869640,
+   "data": {
+    "player": "Плеер CVH",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 3
+   },
+   "number": "2",
+   "date": 1753038420,
+   "iframe_url": "//ru.yummyani.me/iframeCVH.html?dubbing_code=MC+Entertainment&anime_id=33&episode=2&dubbing=%D0%9E%D0%B7%D0%B2%D1%83%D1%87%D0%BA%D0%B0+MC+Entertainment",
+   "index": 152418,
+   "skips": {
+    "opening": {
+     "time": 22,
+     "length": 59
+    },
+    "ending": {
+     "time": 1301,
+     "length": 39
+    }
+   },
+   "views": 1847,
+   "duration": 1419
+  },
+  {
+   "video_id": 869641,
+   "data": {
+    "player": "Плеер CVH",
+    "dubbing": "Озвучка MC Entertainment",
+    "player_id": 3
+   },
+   "number": "3",
+   "date": 1753038420,
+   "iframe_url": "//ru.yummyani.me/iframeCVH.html?dubbing_code=MC+Entertainment&anime_id=33&episode=3&dubbing=%D0%9E%D0%B7%D0%B2%D1%83%D1%87%D0%BA%D0%B0+MC+Entertainment",
+   "index": 152419,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 129
+    },
+    "ending": {
+     "time": 1302,
+     "length": 104
+    }
+   },
+   "views": 1567,
+   "duration": 1419
+  },
+  {
+   "video_id": 444420,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка Сербин",
+    "player_id": 2
+   },
+   "number": "1",
+   "date": 1677764372,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=77&season=1&episode=1&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152203,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 139
+    },
+    "ending": {
+     "time": 1301,
+     "length": 24
+    }
+   },
+   "views": 106,
+   "duration": 1419
+  },
+  {
+   "video_id": 444422,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка Сербин",
+    "player_id": 2
+   },
+   "number": "2",
+   "date": 1677764372,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=77&season=1&episode=2&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152205,
+   "skips": {
+    "opening": {
+     "time": 22,
+     "length": 59
+    },
+    "ending": {
+     "time": 1301,
+     "length": 89
+    }
+   },
+   "views": 30,
+   "duration": 1419
+  },
+  {
+   "video_id": 444424,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка Сербин",
+    "player_id": 2
+   },
+   "number": "3",
+   "date": 1677764372,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=77&season=1&episode=3&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152207,
+   "skips": {
+    "opening": {
+     "time": 68,
+     "length": 59
+    },
+    "ending": {
+     "time": 1325,
+     "length": 44
+    }
+   },
+   "views": 25,
+   "duration": 1419
+  },
+  {
+   "video_id": 204307,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка Сербин",
+    "player_id": 4
+   },
+   "number": "1",
+   "date": 0,
+   "iframe_url": "//kodikplayer.com/season/56098/0c14ef1a863f9d7c7089b9dc39666ea2/720p?translations=false&only_episode=true&only_season=true&episode=1",
+   "index": 152177,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 134
+    },
+    "ending": {
+     "time": 1385,
+     "length": 24
+    }
+   },
+   "views": 556,
+   "duration": 1419
+  },
+  {
+   "video_id": 204308,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка Сербин",
+    "player_id": 4
+   },
+   "number": "2",
+   "date": 0,
+   "iframe_url": "//kodikplayer.com/season/56098/0c14ef1a863f9d7c7089b9dc39666ea2/720p?translations=false&only_episode=true&only_season=true&episode=2",
+   "index": 152178,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 104
+    },
+    "ending": {
+     "time": 1300,
+     "length": 89
+    }
+   },
+   "views": 146,
+   "duration": 1419
+  },
+  {
+   "video_id": 204309,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка Сербин",
+    "player_id": 4
+   },
+   "number": "3",
+   "date": 0,
+   "iframe_url": "//kodikplayer.com/season/56098/0c14ef1a863f9d7c7089b9dc39666ea2/720p?translations=false&only_episode=true&only_season=true&episode=3",
+   "index": 152179,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 129
+    },
+    "ending": {
+     "time": 1385,
+     "length": 24
+    }
+   },
+   "views": 102,
+   "duration": 1419
+  },
+  {
+   "video_id": 721929,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка Amber",
+    "player_id": 4
+   },
+   "number": "1",
+   "date": 1738174491,
+   "iframe_url": "//kodikplayer.com/season/107793/665a7d6853b76ddd1aa14a5724f78423/720p?translations=false&only_episode=true&only_season=true&episode=1",
+   "index": 152337,
+   "skips": {
+    "opening": {
+     "time": 17,
+     "length": 139
+    },
+    "ending": {
+     "time": 1333,
+     "length": 89
+    }
+   },
+   "views": 436,
+   "duration": 1429
+  },
+  {
+   "video_id": 723722,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка Amber",
+    "player_id": 4
+   },
+   "number": "2",
+   "date": 1739148378,
+   "iframe_url": "//kodikplayer.com/season/107793/665a7d6853b76ddd1aa14a5724f78423/720p?translations=false&only_episode=true&only_season=true&episode=2",
+   "index": 152338,
+   "skips": {
+    "opening": {
+     "time": 35,
+     "length": 59
+    },
+    "ending": {
+     "time": 1312,
+     "length": 104
+    }
+   },
+   "views": 167,
+   "duration": 1429
+  },
+  {
+   "video_id": 725172,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка Amber",
+    "player_id": 4
+   },
+   "number": "3",
+   "date": 1739928585,
+   "iframe_url": "//kodikplayer.com/season/107793/665a7d6853b76ddd1aa14a5724f78423/720p?translations=false&only_episode=true&only_season=true&episode=3",
+   "index": 152339,
+   "skips": {
+    "opening": {
+     "time": 79,
+     "length": 59
+    },
+    "ending": {
+     "time": 1312,
+     "length": 104
+    }
+   },
+   "views": 122,
+   "duration": 1429
+  },
+  {
+   "video_id": 644630,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка ConeVoice",
+    "player_id": 4
+   },
+   "number": "1",
+   "date": 1712407905,
+   "iframe_url": "//kodikplayer.com/season/100101/4e468a176b311ac115dcc794b965dc62/720p?translations=false&only_episode=true&only_season=true&episode=1",
+   "index": 152277,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 139
+    },
+    "ending": {
+     "time": 1304,
+     "length": 104
+    }
+   },
+   "views": 520,
+   "duration": 1420
+  },
+  {
+   "video_id": 644631,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка ConeVoice",
+    "player_id": 4
+   },
+   "number": "2",
+   "date": 1712407905,
+   "iframe_url": "//kodikplayer.com/season/100101/4e468a176b311ac115dcc794b965dc62/720p?translations=false&only_episode=true&only_season=true&episode=2",
+   "index": 152278,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 89
+    },
+    "ending": {
+     "time": 1304,
+     "length": 104
+    }
+   },
+   "views": 120,
+   "duration": 1421
+  },
+  {
+   "video_id": 644632,
+   "data": {
+    "player": "Плеер Kodik",
+    "dubbing": "Озвучка ConeVoice",
+    "player_id": 4
+   },
+   "number": "3",
+   "date": 1712407905,
+   "iframe_url": "//kodikplayer.com/season/100101/4e468a176b311ac115dcc794b965dc62/720p?translations=false&only_episode=true&only_season=true&episode=3",
+   "index": 152279,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 134
+    },
+    "ending": {
+     "time": 1341,
+     "length": 69
+    }
+   },
+   "views": 81,
+   "duration": 1420
+  },
+  {
+   "video_id": 152152,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка Гоблин",
+    "player_id": 2
+   },
+   "number": "1",
+   "date": 0,
+   "iframe_url": "https://alloha.yani.tv/?kp=257376&token=8b5512267a2a52e9de06d67d342e0c&translation=63&season=1&episode=1&hidden=translation,season,episode",
+   "index": 152152,
+   "skips": {
+    "opening": {
+     "time": 75,
+     "length": 64
+    },
+    "ending": {
+     "time": 1302,
+     "length": 114
+    }
+   },
+   "views": 476,
+   "duration": 1417
+  },
+  {
+   "video_id": 152153,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка Гоблин",
+    "player_id": 2
+   },
+   "number": "2",
+   "date": 0,
+   "iframe_url": "https://alloha.yani.tv/?kp=257376&token=8b5512267a2a52e9de06d67d342e0c&translation=63&season=1&episode=2&hidden=translation,season,episode",
+   "index": 152153,
+   "skips": {
+    "opening": {
+     "time": 20,
+     "length": 64
+    },
+    "ending": {
+     "time": 1302,
+     "length": 69
+    }
+   },
+   "views": 125,
+   "duration": 1417
+  },
+  {
+   "video_id": 152154,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Озвучка Гоблин",
+    "player_id": 2
+   },
+   "number": "3",
+   "date": 0,
+   "iframe_url": "https://alloha.yani.tv/?kp=257376&token=8b5512267a2a52e9de06d67d342e0c&translation=63&season=1&episode=3&hidden=translation,season,episode",
+   "index": 152154,
+   "skips": {
+    "opening": {
+     "time": 0,
+     "length": 124
+    },
+    "ending": {
+     "time": 1299,
+     "length": 114
+    }
+   },
+   "views": 75,
+   "duration": 1417
+  },
+  {
+   "video_id": 741845,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Субтитры",
+    "player_id": 2
+   },
+   "number": "1",
+   "date": 1746121719,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=79&season=1&episode=1&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152351,
+   "skips": {
+    "opening": null,
+    "ending": {
+     "time": 1384,
+     "length": 29
+    }
+   },
+   "views": 105,
+   "duration": 1417
+  },
+  {
+   "video_id": 741846,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Субтитры",
+    "player_id": 2
+   },
+   "number": "2",
+   "date": 1746121719,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=79&season=1&episode=2&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152352,
+   "skips": {
+    "opening": {
+     "time": 23,
+     "length": 59
+    },
+    "ending": {
+     "time": 1299,
+     "length": 114
+    }
+   },
+   "views": 39,
+   "duration": 1417
+  },
+  {
+   "video_id": 741847,
+   "data": {
+    "player": "Плеер Alloha",
+    "dubbing": "Субтитры",
+    "player_id": 2
+   },
+   "number": "3",
+   "date": 1746121719,
+   "iframe_url": "//alloha.yani.tv/?token_movie=63ecf02ed348a9a66000b0e8bd82ce&translation=79&season=1&episode=3&token=8b5512267a2a52e9de06d67d342e0c&hidden=translation,season,episode",
+   "index": 152353,
+   "skips": {
+    "opening": {
+     "time": 68,
+     "length": 59
+    },
+    "ending": {
+     "time": 1296,
+     "length": 89
+    }
+   },
+   "views": 29,
+   "duration": 1417
+  }
+ ]
+}

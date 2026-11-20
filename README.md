@@ -229,6 +229,7 @@ dist\yummy-dl\
   yummy-dl.exe          <- the CLI
   ffmpeg.exe            <- with -BundleFfmpeg
   README.md
+  LICENSE, THIRD-PARTY-NOTICES.md, licenses\   <- licence texts (yummy-dl, Qt, ffmpeg, Python, packages)
 dist\yummy-dl-windows.zip  <- the same folder zipped, ready to share
 ```
 
@@ -264,3 +265,11 @@ the machine that runs it. On Linux it's usually simpler to skip building and jus
 ### CI
 
 `.github/workflows/build.yml` builds the Windows zip for `v*` tags or a manual run, once the repo is on GitHub.
+
+## License
+
+yummy-dl is released under the [MIT License](LICENSE).
+
+The Windows release also bundles Qt/PySide6 (LGPL-3.0), FFmpeg (GPL-3.0), Python and several Python packages, each
+under its own licence. [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) lists them with links to their source code.
+The build script puts their licence texts into `licenses\` in the zip.

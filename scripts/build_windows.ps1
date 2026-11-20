@@ -4,6 +4,7 @@
     yummy-dl-gui.exe + _internal\   desktop app (one-folder build, starts fast)
     yummy-dl.exe                    command-line tool (single file)
     ffmpeg.exe                      with -BundleFfmpeg
+    LICENSE, THIRD-PARTY-NOTICES.md, licenses\   licence texts for yummy-dl and everything bundled
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
@@ -49,8 +50,9 @@ if ($LASTEXITCODE) { throw "PyInstaller (CLI) failed" }
 if ($LASTEXITCODE) { throw "built CLI exe failed to run" }
 
 $stage = Join-Path $root "dist\yummy-dl"
-Copy-Item dist\yummy-dl.exe, README.md $stage -Force
+Copy-Item dist\yummy-dl.exe, README.md, LICENSE, THIRD-PARTY-NOTICES.md $stage -Force
 
+$licenseArgs = @("scripts\collect_licenses.py", "$stage\licenses")
 if ($BundleFfmpeg) {
     if (-not $FfmpegPath) {
         $cmd = Get-Command ffmpeg.exe -ErrorAction SilentlyContinue
@@ -58,7 +60,11 @@ if ($BundleFfmpeg) {
         $FfmpegPath = $cmd.Source
     }
     Copy-Item $FfmpegPath $stage -Force
+    $licenseArgs += @("--ffmpeg", $FfmpegPath)
 }
+# Licence texts of everything bundled (Qt, ffmpeg, Python, packages), at the versions just built.
+& $py @licenseArgs
+if ($LASTEXITCODE) { throw "collecting licences failed" }
 
 $zip = "dist\yummy-dl-windows.zip"
 if (Test-Path $zip) { Remove-Item $zip }

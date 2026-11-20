@@ -41,5 +41,6 @@ Pipeline: `api.YummyClient` (search / anime / videos) → `models.Video` (one pe
 ## Packaging notes
 
 - The GUI is intentionally a PyInstaller **one-folder** build (`_internal/` must stay next to the exe); one-file Qt builds started in 10+ s. The CLI is a one-file build without Qt.
+- Licensing: the code is MIT. The release bundles LGPL Qt and GPL ffmpeg, so `build_windows.ps1` runs `scripts/collect_licenses.py` to put their licence texts into the zip. When adding a bundled dependency, check that it lands there and update `THIRD-PARTY-NOTICES.md`.
 - Build Windows releases from a Windows drive, not a `\\wsl.localhost` path. A stale exe icon after rebuild is Windows' icon cache (`ie4uinit.exe -show`).
 - The API is for personal use only; don't add features that redistribute content.
